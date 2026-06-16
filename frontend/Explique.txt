@@ -1,0 +1,277 @@
+Explique - Landing page University Key
+
+Ce fichier explique les couleurs et les widgets utilises dans la landing page, dans l'ordre ou ils apparaissent dans l'interface.
+
+
+1. Header
+
+Couleurs:
+- bg-white/95: fond blanc legerement transparent pour garder un header lumineux.
+- border-slate-200 et shadow-slate-200/40: separation douce entre le header et le contenu.
+- #073071: bleu profond utilise pour le logo et les actions importantes.
+- #06255a: bleu tres fonce utilise pour le mot UNIVERSITY.
+- #2fa34a: vert de marque utilise pour le mot KEY et l'element central du logo.
+- #061d49: bleu nuit utilise pour les liens de navigation.
+- blue-50: fond de survol tres clair sur les liens.
+- #073f8f: bleu principal du bouton d'inscription.
+- #052f6f: bleu plus sombre au survol du bouton d'inscription.
+
+Widgets:
+- Header sticky: reste en haut de la page pendant le scroll.
+- Logo bouclier: SVG interne qui represente la confiance et l'education.
+- Navigation: liens vers les sections principales de la page.
+- Bouton langue: bascule FR/EN.
+- Liens Connexion et Inscription: actions principales d'authentification.
+
+2. Hero
+
+Couleurs:
+- bg-white: fond blanc pour une premiere section propre.
+- #061d49: couleur du grand titre pour donner du poids.
+- slate-600: texte descriptif secondaire, moins fort que le titre.
+- #073f8f: bouton principal et nombre "10 000+".
+- #052f6f: couleur de survol du bouton principal.
+- #0b58bd: bordure du bouton secondaire et soulignements.
+- blue-100: forme de fond derriere l'image hero.
+- white: pastilles d'icones autour de l'image.
+- blue-200: cercles pointilles decoratifs.
+- emerald-100: nuance verte dans les avatars pour rappeler la marque.
+
+Widgets:
+- Grand titre: phrase principale de la promesse.
+- Bouton primaire: "Passer un test d'orientation".
+- Bouton secondaire: "Explorer les filieres".
+- Avatars initials: petits cercles A, B, C, D pour montrer une communaute d'etudiants.
+- Image hero: photo locale /images/hero-student.png.
+- Pastilles icones: graduation, batiment et livre pour rappeler l'orientation, les ecoles et les filieres.
+- Forme organique arrondie: masque visuel autour de l'image.
+
+3. Section "Comment ca marche ?"
+
+Couleurs:
+- #061d49: titres de section et titres d'etape.
+- #0b58bd: petit trait bleu sous le titre.
+- blue-50 vers slate-50: degrade tres clair pour les cercles d'icones.
+- #073f8f: icones et numeros d'etapes.
+- blue-200: lignes pointillees entre les etapes.
+- slate-500: texte descriptif des etapes.
+
+Widgets:
+- SectionTitle: composant reutilisable pour afficher un titre centre avec soulignement.
+- Cartes d'etapes: quatre blocs qui expliquent le parcours utilisateur.
+- Numeros ronds: affichent l'ordre des actions.
+- Ligne pointillee: relie visuellement les etapes sur desktop.
+
+4. Statistiques
+
+Couleurs:
+- bg-slate-50: fond legerement gris pour detacher le bloc de stats.
+- border-slate-100 et border-slate-200: separations tres fines.
+- #073f8f: valeurs numeriques et icones.
+- slate-600: libelles des statistiques.
+
+Widgets:
+- Grille de statistiques: quatre colonnes sur desktop.
+- Icones: batiment, livre, utilisateurs et diplome.
+- Grandes valeurs: 150+, 500+, 100+, 10 000+.
+
+5. Filieres populaires
+
+Couleurs:
+- bg-white: cartes blanches.
+- border-slate-100: bordure discrete.
+- shadow-slate-200/60: ombre douce pour faire ressortir les cartes.
+- #073f8f: icones principales.
+- #2f9f43: accent vert pour Agronomie.
+- #061d49: noms des filieres.
+- blue-50: fond de survol du lien "Voir toutes les filieres".
+
+Widgets:
+- Cartes de filieres: Medicine, Genie Logiciel, Comptabilite, Droit, Agronomie, Kinesitherapie.
+- Icones SVG: stethoscope, laptop, calculator, scale, leaf, therapy.
+- Lien "Voir toutes les filieres": action de navigation vers la liste complete.
+
+6. Universites et ecoles populaires
+
+Couleurs:
+- bg-white: fond des cartes.
+- border-slate-100: bordures legeres.
+- #061d49: noms des ecoles.
+- #073f8f: boutons de navigation.
+- red-50/red-700, amber-50/amber-700, emerald-50/emerald-700, green-50/green-700, cyan-50/cyan-700, rose-50/rose-700: pastilles differenciees par ecole.
+
+Widgets:
+- Cartes d'ecoles: affichent une pastille avec initiales et le nom de l'etablissement.
+- Boutons precedent/suivant: boutons ronds prevus pour un futur carousel.
+- Grille responsive: deux colonnes sur tablette, six colonnes sur grand ecran.
+
+7. CTA final
+
+Couleurs:
+- Degrade #073071 vers #074aa8: bande bleue forte pour conclure la page.
+- white: texte principal et bouton.
+- blue-100: texte secondaire du CTA.
+- #073f8f: texte du bouton blanc.
+- blue-50: survol du bouton blanc.
+- shadow-blue-950/20: ombre bleutee pour donner du relief.
+
+Widgets:
+- Bande CTA: bloc final qui invite a creer un compte.
+- Bouton "Creer un compte gratuitement": action principale de conversion.
+- Fleche: indique que le bouton amene vers l'etape suivante.
+
+8. Footer
+
+Couleurs:
+- bg-white: fond neutre.
+- slate-600: texte secondaire.
+- #073071, #06255a, #2fa34a: rappel des couleurs de marque.
+- blue-200 et #073f8f: liens sociaux encadres.
+- #061d49: titres des colonnes.
+- slate-100: ligne de separation basse.
+- slate-500: copyright et informations legales.
+
+Widgets:
+- Logo footer: rappel visuel de University Key.
+- Liens sociaux: logos SVG locaux Facebook, Instagram et Twitter.
+- Colonnes de liens: Plateforme, Ressources, Entreprise et Legal.
+- Copyright: mention de l'annee et des droits.
+
+9. Classes et comportements globaux
+
+Couleurs:
+- focus-ring utilise une bordure orange #f97316 dans App.css pour rendre le focus clavier visible.
+- Les couleurs Tailwind slate servent aux textes neutres, bordures et separations.
+- Les couleurs bleues representent la confiance, l'education et l'action.
+- Les touches vertes representent la progression, la reussite et la marque KEY.
+
+Widgets:
+- focus-ring: classe d'accessibilite pour les elements interactifs.
+- Grilles responsive: adaptent les sections entre mobile, tablette et desktop.
+- SVG inline: les icones restent controlees par le CSS via currentColor.
+- Image locale: evite une dependance externe pour le hero.
+
+10. Page Connexion
+
+Route front-end:
+- #connexion
+- #login et #auth sont aussi acceptes par App.jsx pour rester compatibles avec les anciens liens.
+
+Couleurs:
+- Degrade blanc vers blue-50: conserve une ambiance claire et proche de la capture.
+- #061d49: titres principaux.
+- #073f8f: boutons, icones et liens importants.
+- #052f6f: survol du bouton principal.
+- slate-500 et slate-600: textes secondaires.
+- blue-50: blocs d'information et icones d'avantage.
+- white: carte du formulaire.
+- shadow-blue-950/10: ombre douce de la carte.
+
+Widgets:
+- Colonne gauche: message de bienvenue, liste d'avantages et illustration diplome/livres.
+- Carte Connexion: formulaire principal.
+- Champs avec icone: identifiant et mot de passe.
+- Bouton oeil: emplacement prevu pour afficher/masquer le mot de passe.
+- Checkbox "Se souvenir de moi": liee a la logique Laravel du remember token.
+- Boutons Google/Facebook: placeholders pour une future connexion sociale.
+- Logos Google/Facebook: composants SVG locaux via BrandIcon.
+- Carte securite: rappelle la protection des donnees.
+
+Variables backend conservees:
+- Table users:
+  - email: champ utilise pour l'adresse e-mail. Le placeholder accepte aussi le telephone, mais le name reste email pour rester proche de Laravel.
+  - password: champ du mot de passe.
+  - remember_token: checkbox de session persistante, en lien avec la colonne Laravel rememberToken.
+
+11. Page Inscription
+
+Route front-end:
+- #inscription
+- #register est aussi accepte par App.jsx.
+
+Couleurs:
+- Degrade blanc vers blue-50: meme ambiance que la page connexion.
+- #061d49: titre principal et titre de formulaire.
+- #073f8f: bouton principal, liens, icones.
+- #052f6f: survol du bouton principal.
+- white: carte du formulaire.
+- blue-50: carte de verification et blocs d'avantages.
+- slate-500/slate-600: textes explicatifs.
+
+Widgets:
+- Colonne gauche: promesse d'inscription, avantages et image etudiante.
+- Carte Inscription: formulaire de creation de compte.
+- Champs Prenom/Nom: base du profil etudiant.
+- Champ cache name: concatene prenom + nom pour alimenter la colonne users.name.
+- Champs caches role, statut et langue_preferee: valeurs par defaut alignees sur la table users.
+- Champs email, telephone, password: colonnes de la table users.
+- Champ password_confirmation: convention Laravel pour confirmer le mot de passe, pas une colonne en base.
+- Checkbox conditions: validation front-end/legale, pas une colonne de table.
+- Boutons Google/Facebook: placeholders pour une future inscription sociale.
+- Logos Google/Facebook: composants SVG locaux via BrandIcon.
+- Carte verification: rappelle la demarche codes_verification apres inscription.
+
+Variables backend conservees:
+- Table users:
+  - name
+  - email
+  - password
+  - telephone
+  - role avec valeur "etudiant"
+  - statut avec valeur "actif"
+  - langue_preferee avec valeur "fr"
+- Table profils_etudiants:
+  - prenom
+  - nom
+- Convention Laravel hors table directe:
+  - password_confirmation
+- Table codes_verification, utilisee apres creation de compte:
+  - user_id
+  - code
+  - type
+  - cible
+  - statut
+
+12. Logos sociaux
+
+Fichier:
+- src/components/common/BrandIcon.jsx
+
+Couleurs:
+- Google utilise les couleurs officielles visuelles: bleu, vert, jaune et rouge.
+- Facebook utilise un cercle bleu avec un "f" blanc.
+- Instagram utilise un degrade rouge, orange, rose et violet.
+- Twitter utilise un cercle bleu clair avec un oiseau blanc stylise.
+
+Widgets:
+- BrandIcon: composant reutilisable qui affiche un logo selon la propriete name.
+- Utilise dans LoginPage et RegisterPage pour les boutons Google/Facebook.
+- Utilise dans Footer pour Facebook, Instagram et Twitter.
+
+13. Fenetre pop-up des regles
+
+Source backend:
+- Table regles.
+- Colonne conditions pour les Conditions d'utilisation.
+- Colonne politique pour la Politique de confidentialite.
+- Endpoint public: GET /api/v1/regles.
+
+Fichiers front-end:
+- src/components/legal/LegalModal.jsx
+- src/App.jsx
+- src/pages/auth/RegisterPage.jsx
+- src/components/layout/Footer.jsx
+
+Couleurs:
+- Fond exterieur: noir transparent via bg-slate-950/55.
+- Fenetre: blanc pur pour respecter la demande.
+- Texte normal: noir via text-slate-950.
+- Points essentiels: bleu #073f8f pour les titres et les listes.
+- Bordures: slate-200 pour separer l'entete de la fenetre.
+
+Widgets:
+- LegalModal: fenetre pop-up blanche.
+- Fermeture au clic a cote: le fond ferme la modale.
+- Bouton X: ferme aussi la fenetre.
+- Zone scrollable: permet de lire les longs textes sans agrandir toute la page.
+- Boutons Conditions/Politique: ouvrent la modale depuis l'inscription et le footer.

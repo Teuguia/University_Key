@@ -1,0 +1,23 @@
+# Dependencies
+backend/vendor/
+frontend/node_modules/
+
+# Environment files
+backend/.env
+frontend/.env
+*.env.local
+
+# Generated builds and caches
+frontend/dist/
+backend/public/build/
+backend/.phpunit.result.cache
+
+# Runtime logs
+*.log
+backend/storage/logs/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
