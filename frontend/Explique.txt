@@ -201,9 +201,11 @@ Couleurs:
 Widgets:
 - Colonne gauche: promesse d'inscription, avantages et image etudiante.
 - Carte Inscription: formulaire de creation de compte.
+- Choix de role: boutons Etudiant / Conseiller, lies a la colonne users.role.
 - Champs Prenom/Nom: base du profil etudiant.
+- Champ Specialite: affiche uniquement pour le role conseiller et alimente profils_conseillers.specialite.
 - Champ cache name: concatene prenom + nom pour alimenter la colonne users.name.
-- Champs caches role, statut et langue_preferee: valeurs par defaut alignees sur la table users.
+- Champs caches statut et langue_preferee: valeurs par defaut alignees sur la table users.
 - Champs email, telephone, password: colonnes de la table users.
 - Champ password_confirmation: convention Laravel pour confirmer le mot de passe, pas une colonne en base.
 - Checkbox conditions: validation front-end/legale, pas une colonne de table.
@@ -217,12 +219,16 @@ Variables backend conservees:
   - email
   - password
   - telephone
-  - role avec valeur "etudiant"
+  - role avec valeur "etudiant" ou "conseiller"
   - statut avec valeur "actif"
   - langue_preferee avec valeur "fr"
 - Table profils_etudiants:
   - prenom
   - nom
+- Table profils_conseillers:
+  - prenom
+  - nom
+  - specialite
 - Convention Laravel hors table directe:
   - password_confirmation
 - Table codes_verification, utilisee apres creation de compte:

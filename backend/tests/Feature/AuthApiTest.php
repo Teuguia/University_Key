@@ -50,6 +50,7 @@ class AuthApiTest extends TestCase
     public function test_student_can_register_and_receive_token(): void
     {
         $response = $this->postJson('/api/v1/auth/register', [
+            'role' => 'etudiant',
             'prenom' => 'Marie',
             'nom' => 'Ngono',
             'email' => 'marie.ngono@example.com',
@@ -72,6 +73,37 @@ class AuthApiTest extends TestCase
             'nom' => 'Ngono',
         ]);
         $this->assertDatabaseCount('codes_verification', 2);
+    }
+
+    /**
+     * Verifie qu'un conseiller peut choisir son role et creer le profil conseiller.
+     */
+    public function test_counselor_can_register_with_role_and_speciality(): void
+    {
+        $response = $this->postJson('/api/v1/auth/register', [
+            'role' => 'conseiller',
+            'prenom' => 'Paul',
+            'nom' => 'Mvondo',
+            'email' => 'paul.mvondo@example.com',
+            'telephone' => '691111111',
+            'specialite' => 'Orientation scolaire et professionnelle',
+            'password' => 'secret123',
+            'password_confirmation' => 'secret123',
+            'conditions_acceptees' => true,
+        ]);
+
+        $response
+            ->assertCreated()
+            ->assertJsonPath('user.role', 'conseiller');
+
+        $user = User::query()->where('email', 'paul.mvondo@example.com')->firstOrFail();
+
+        $this->assertDatabaseHas('profils_conseillers', [
+            'user_id' => $user->id,
+            'prenom' => 'Paul',
+            'nom' => 'Mvondo',
+            'specialite' => 'Orientation scolaire et professionnelle',
+        ]);
     }
 
     /**

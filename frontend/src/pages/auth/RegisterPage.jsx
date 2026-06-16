@@ -106,6 +106,7 @@ function TextField({ icon, label, name, placeholder, type = 'text', autoComplete
  */
 export function RegisterPage({ onOpenLegal }) {
   const [identity, setIdentity] = useState({ prenom: '', nom: '' })
+  const [role, setRole] = useState('etudiant')
   const [status, setStatus] = useState({ type: '', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const fullName = `${identity.prenom} ${identity.nom}`.trim()
@@ -123,8 +124,10 @@ export function RegisterPage({ onOpenLegal }) {
         body: JSON.stringify({
           prenom: formData.get('prenom'),
           nom: formData.get('nom'),
+          role: formData.get('role'),
           email: formData.get('email'),
           telephone: formData.get('telephone'),
+          specialite: formData.get('specialite'),
           password: formData.get('password'),
           password_confirmation: formData.get('password_confirmation'),
           conditions_acceptees: formData.get('conditions_acceptees'),
@@ -180,9 +183,38 @@ export function RegisterPage({ onOpenLegal }) {
 
             {/* Champs caches alignes sur les valeurs par defaut prevues cote backend. */}
             <input name="name" readOnly type="hidden" value={fullName} />
-            <input name="role" readOnly type="hidden" value="etudiant" />
             <input name="statut" readOnly type="hidden" value="actif" />
             <input name="langue_preferee" readOnly type="hidden" value="fr" />
+
+            {/* Role stocke dans users.role: seuls etudiant et conseiller sont ouverts a l'inscription publique. */}
+            <fieldset className="mt-8">
+              <legend className="text-sm font-black text-[#06255a]">Vous êtes</legend>
+              <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                {[
+                  { label: 'Étudiant', value: 'etudiant' },
+                  { label: 'Conseiller', value: 'conseiller' },
+                ].map((option) => (
+                  <label
+                    className={`flex min-h-12 cursor-pointer items-center justify-center rounded-md border px-4 text-sm font-black ${
+                      role === option.value
+                        ? 'border-[#073f8f] bg-blue-50 text-[#073f8f]'
+                        : 'border-slate-200 bg-white text-slate-600 hover:bg-slate-50'
+                    }`}
+                    key={option.value}
+                  >
+                    <input
+                      checked={role === option.value}
+                      className="sr-only"
+                      name="role"
+                      onChange={() => setRole(option.value)}
+                      type="radio"
+                      value={option.value}
+                    />
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
 
             <div className="mt-8 grid gap-5 sm:grid-cols-2">
               <TextField
@@ -208,6 +240,15 @@ export function RegisterPage({ onOpenLegal }) {
             <div className="mt-5 space-y-5">
               <TextField autoComplete="email" icon="mail" label="Adresse e-mail" name="email" placeholder="exemple@email.com" type="email" />
               <TextField autoComplete="tel" icon="phone" label="Numéro de téléphone" name="telephone" placeholder="6XXXXXXX" type="tel" />
+              {role === 'conseiller' && (
+                <TextField
+                  autoComplete="organization-title"
+                  icon="user"
+                  label="Spécialité"
+                  name="specialite"
+                  placeholder="Orientation scolaire et professionnelle"
+                />
+              )}
               <TextField autoComplete="new-password" icon="lock" label="Mot de passe" name="password" placeholder="Créez un mot de passe" type="password" />
               <TextField autoComplete="new-password" icon="lock" label="Confirmer le mot de passe" name="password_confirmation" placeholder="Confirmez votre mot de passe" type="password" />
             </div>

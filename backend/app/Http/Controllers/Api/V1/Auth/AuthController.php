@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Auth\LoginRequest;
 use App\Http\Requests\Api\V1\Auth\RegisterRequest;
 use App\Models\CodeVerification;
+use App\Models\ProfilConseiller;
 use App\Models\ProfilEtudiant;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -19,7 +20,7 @@ use Illuminate\Validation\ValidationException;
 class AuthController extends Controller
 {
     /**
-     * Cree un compte etudiant, son profil et ses codes de verification.
+     * Cree un compte etudiant ou conseiller, son profil et ses codes de verification.
      */
     public function register(RegisterRequest $request): JsonResponse
     {
@@ -31,17 +32,27 @@ class AuthController extends Controller
                 'email' => $validated['email'],
                 // Hash explicite pour rendre la securite visible, meme si le cast User le protege aussi.
                 'password' => Hash::make($validated['password']),
-                'role' => 'etudiant',
+                'role' => $validated['role'],
                 'statut' => 'actif',
                 'telephone' => $validated['telephone'],
                 'langue_preferee' => $validated['langue_preferee'] ?? 'fr',
             ]);
 
-            ProfilEtudiant::query()->create([
-                'user_id' => $user->id,
-                'prenom' => $validated['prenom'],
-                'nom' => $validated['nom'],
-            ]);
+            // Chaque role cree le profil correspondant aux tables de la base.
+            if ($validated['role'] === 'conseiller') {
+                ProfilConseiller::query()->create([
+                    'user_id' => $user->id,
+                    'prenom' => $validated['prenom'],
+                    'nom' => $validated['nom'],
+                    'specialite' => $validated['specialite'],
+                ]);
+            } else {
+                ProfilEtudiant::query()->create([
+                    'user_id' => $user->id,
+                    'prenom' => $validated['prenom'],
+                    'nom' => $validated['nom'],
+                ]);
+            }
 
             $this->createVerificationCode($user, 'email', $user->email);
             $this->createVerificationCode($user, 'telephone', $user->telephone);
@@ -114,7 +125,7 @@ class AuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
-        $user = $request->user()->loadMissing('profilEtudiant');
+        $user = $request->user()->loadMissing(['profilEtudiant', 'profilConseiller']);
 
         return response()->json([
             'data' => $this->publicUser($user),
@@ -164,7 +175,7 @@ class AuthController extends Controller
         return [
             'token_type' => 'Bearer',
             'token' => $token,
-            'user' => $this->publicUser($user->loadMissing('profilEtudiant')),
+            'user' => $this->publicUser($user->loadMissing(['profilEtudiant', 'profilConseiller'])),
         ];
     }
 
@@ -183,6 +194,7 @@ class AuthController extends Controller
             'langue_preferee' => $user->langue_preferee,
             'derniere_connexion' => $user->derniere_connexion,
             'profil_etudiant' => $user->profilEtudiant,
+            'profil_conseiller' => $user->profilConseiller,
         ];
     }
 }
