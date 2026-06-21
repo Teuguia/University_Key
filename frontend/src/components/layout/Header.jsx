@@ -1,7 +1,7 @@
 /**
  * Affiche l'en-tete principal avec navigation, changement de langue et action de connexion.
  */
-export function Header({ language, labels, onLanguageChange }) {
+export function Header({ language, labels, onLanguageChange, showAuthActions = true }) {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm shadow-slate-200/40 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
@@ -44,18 +44,22 @@ export function Header({ language, labels, onLanguageChange }) {
           >
             {language === 'fr' ? 'EN' : 'FR'}
           </button>
-          <a
-            className="focus-ring rounded-md px-3 py-2 text-sm font-extrabold text-[#073071] hover:bg-blue-50"
-            href="#connexion"
-          >
-            {labels.login}
-          </a>
-          <a
-            className="focus-ring rounded-md bg-[#073f8f] px-4 py-3 text-sm font-extrabold text-white shadow-sm shadow-blue-900/20 hover:bg-[#052f6f]"
-            href="#inscription"
-          >
-            {labels.register}
-          </a>
+          {showAuthActions && (
+            <>
+              <a
+                className="focus-ring rounded-md px-3 py-2 text-sm font-extrabold text-[#073071] hover:bg-blue-50"
+                href="#connexion"
+              >
+                {labels.login}
+              </a>
+              <a
+                className="focus-ring rounded-md bg-[#073f8f] px-4 py-3 text-sm font-extrabold text-white shadow-sm shadow-blue-900/20 hover:bg-[#052f6f]"
+                href="#inscription"
+              >
+                {labels.register}
+              </a>
+            </>
+          )}
         </div>
       </div>
     </header>

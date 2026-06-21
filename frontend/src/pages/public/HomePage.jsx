@@ -1,57 +1,5 @@
 const heroImage = '/images/hero-student.png'
 
-// Donnees des etapes affichees dans le parcours "Comment ca marche ?".
-const steps = [
-  {
-    title: 'Créez votre profil',
-    text: "Renseignez vos informations et vos centres d'intérêt.",
-    icon: 'user',
-  },
-  {
-    title: "Passez le test d'orientation",
-    text: 'Répondez à quelques questions pour mieux vous connaître.',
-    icon: 'clipboard',
-  },
-  {
-    title: 'Découvrez vos recommandations',
-    text: 'Recevez des filières et écoles adaptées à votre profil.',
-    icon: 'target',
-  },
-  {
-    title: 'Construisez votre avenir',
-    text: 'Explorez, comparez et choisissez en toute confiance.',
-    icon: 'briefcase',
-  },
-]
-
-// Indicateurs rapides mis en avant sous les etapes.
-const impactStats = [
-  { value: '150+', label: 'Établissements référencés', icon: 'building' },
-  { value: '500+', label: 'Filières disponibles', icon: 'book' },
-  { value: '100+', label: 'Conseillers certifiés', icon: 'users' },
-  { value: '10 000+', label: 'Étudiants accompagnés', icon: 'graduation' },
-]
-
-// Cartes des filieres populaires affichees sur la landing page.
-const programs = [
-  { name: 'Médecine', icon: 'stethoscope' },
-  { name: 'Génie Logiciel', icon: 'laptop' },
-  { name: 'Comptabilité', icon: 'calculator' },
-  { name: 'Droit', icon: 'scale' },
-  { name: 'Agronomie', icon: 'leaf', accent: 'green' },
-  { name: 'Kinésithérapie', icon: 'therapy' },
-]
-
-// Cartes des ecoles populaires avec une pastille de couleur pour differencier chaque etablissement.
-const schools = [
-  { name: 'Université de Yaoundé I', initials: 'UYI', color: 'bg-red-50 text-red-700' },
-  { name: 'Université de Douala', initials: 'UD', color: 'bg-amber-50 text-amber-700' },
-  { name: 'Université de Buea', initials: 'UB', color: 'bg-emerald-50 text-emerald-700' },
-  { name: 'IAI Cameroun', initials: 'IAI', color: 'bg-green-50 text-green-700' },
-  { name: 'Université des Montagnes', initials: 'UDM', color: 'bg-cyan-50 text-cyan-700' },
-  { name: 'ISTAG', initials: 'IS', color: 'bg-rose-50 text-rose-700' },
-]
-
 // Composant interne pour reutiliser les icones SVG sans dependance externe.
 function Icon({ name, className = 'h-8 w-8' }) {
   // Les proprietes communes gardent toutes les icones dans le meme style visuel.
@@ -177,6 +125,12 @@ function SectionTitle({ children }) {
 }
 
 export function HomePage({ labels }) {
+  // Les listes de contenu viennent du dictionnaire pour suivre le changement de langue global.
+  const steps = labels.home.steps
+  const impactStats = labels.home.impactStats
+  const programs = labels.home.programs
+  const schools = labels.home.schools
+
   return (
     <>
       {/* Hero: premiere impression avec promesse, boutons d'action et image etudiante. */}
@@ -195,7 +149,7 @@ export function HomePage({ labels }) {
                 href="#how-it-works"
               >
                 {labels.primaryCta}
-                <span aria-hidden="true">→</span>
+                <span aria-hidden="true">-&gt;</span>
               </a>
               <a
                 className="focus-ring inline-flex min-h-12 items-center justify-center rounded-md border border-[#0b58bd] px-6 text-sm font-black text-[#073f8f] hover:bg-blue-50"
@@ -224,7 +178,7 @@ export function HomePage({ labels }) {
           <div className="relative min-h-[420px] lg:min-h-[580px]">
             <div className="absolute right-0 top-0 h-full w-full rounded-[42%_58%_50%_50%/42%_40%_60%_58%] bg-blue-100" />
             <img
-              alt="Étudiant souriant sur un campus"
+              alt={labels.home.heroAlt}
               className="absolute inset-x-0 bottom-0 z-10 mx-auto h-[420px] w-[88%] rounded-[42%_58%_50%_50%/42%_40%_60%_58%] object-cover object-[50%_42%] shadow-2xl shadow-blue-950/10 md:h-[520px] lg:h-[580px]"
               src={heroImage}
             />
@@ -295,7 +249,7 @@ export function HomePage({ labels }) {
           </div>
           <div className="mt-6 text-center">
             <a className="focus-ring inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-black text-[#073f8f] hover:bg-blue-50" href="#programs">
-              Voir toutes les filières <span aria-hidden="true">→</span>
+              {labels.home.allPrograms} <span aria-hidden="true">-&gt;</span>
             </a>
           </div>
         </div>
@@ -307,11 +261,11 @@ export function HomePage({ labels }) {
           <div className="relative">
             <SectionTitle>{labels.sectionSchools}</SectionTitle>
             <div className="absolute right-0 top-0 hidden gap-3 md:flex">
-              <button className="focus-ring grid h-9 w-9 place-items-center rounded-full border border-slate-200 text-[#073f8f]" type="button" aria-label="Écoles précédentes">
-                ‹
+              <button className="focus-ring grid h-9 w-9 place-items-center rounded-full border border-slate-200 text-[#073f8f]" type="button" aria-label={labels.home.previousSchools}>
+                &lt;
               </button>
-              <button className="focus-ring grid h-9 w-9 place-items-center rounded-full border border-slate-200 text-[#073f8f]" type="button" aria-label="Écoles suivantes">
-                ›
+              <button className="focus-ring grid h-9 w-9 place-items-center rounded-full border border-slate-200 text-[#073f8f]" type="button" aria-label={labels.home.nextSchools}>
+                &gt;
               </button>
             </div>
           </div>
@@ -340,7 +294,7 @@ export function HomePage({ labels }) {
             href="#auth"
           >
             {labels.finalCtaButton}
-            <span aria-hidden="true">→</span>
+            <span aria-hidden="true">-&gt;</span>
           </a>
         </div>
       </section>

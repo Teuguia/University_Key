@@ -9,6 +9,8 @@ use App\Models\CodeVerification;
 use App\Models\ProfilConseiller;
 use App\Models\ProfilEtudiant;
 use App\Models\User;
+use App\Models\ValidationConseiller;
+use App\Services\Admin\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -33,7 +35,8 @@ class AuthController extends Controller
                 // Hash explicite pour rendre la securite visible, meme si le cast User le protege aussi.
                 'password' => Hash::make($validated['password']),
                 'role' => $validated['role'],
-                'statut' => 'actif',
+                // Les conseillers attendent la validation admin avant d'acceder a leur dashboard.
+                'statut' => $validated['role'] === 'conseiller' ? 'en_attente' : 'actif',
                 'telephone' => $validated['telephone'],
                 'langue_preferee' => $validated['langue_preferee'] ?? 'fr',
             ]);
@@ -44,6 +47,17 @@ class AuthController extends Controller
                     'user_id' => $user->id,
                     'prenom' => $validated['prenom'],
                     'nom' => $validated['nom'],
+                    'specialite' => $validated['specialite'],
+                ]);
+
+                // Demande minimale visible dans l'espace admin, a completer ensuite par documents.
+                ValidationConseiller::query()->create([
+                    'conseiller_id' => $user->id,
+                    'statut' => 'en_attente',
+                    'diplome_principal' => 'A completer',
+                    'etablissement_diplome' => 'A completer',
+                    'annees_experience' => 0,
+                    'description_experience' => 'A completer',
                     'specialite' => $validated['specialite'],
                 ]);
             } else {
@@ -66,7 +80,9 @@ class AuthController extends Controller
         ]);
 
         return response()->json([
-            'message' => 'Compte cree avec succes. Verification email et telephone requise.',
+            'message' => $payload['user']['role'] === 'conseiller'
+                ? 'Compte conseiller cree. Il sera accessible apres validation par un administrateur.'
+                : 'Compte cree avec succes. Verification email et telephone requise.',
             ...$payload,
         ], 201);
     }
@@ -82,6 +98,8 @@ class AuthController extends Controller
         $user = User::query()
             ->where('email', $identifiant)
             ->orWhere('telephone', $identifiant)
+            // Permet la connexion du compte admin par son nom public, par exemple MINESEC.
+            ->orWhere('name', $identifiant)
             ->first();
 
         if (! $user || ! Hash::check($validated['password'], $user->password)) {
@@ -113,6 +131,16 @@ class AuthController extends Controller
             'user_id' => $user->id,
             'ip' => $request->ip(),
         ]);
+
+        if ($user->isAdmin()) {
+            app(ActivityLogService::class)->record(
+                $user,
+                'Connexion administrateur',
+                "{$user->name} s’est connecte a l’espace administrateur.",
+                $request,
+                ['target_type' => 'session', 'target_id' => $user->id]
+            );
+        }
 
         return response()->json([
             'message' => 'Connexion reussie.',

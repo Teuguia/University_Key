@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../services/apiClient'
 
-const modalTitles = {
-  conditions: "Conditions d'utilisation",
-  politique: 'Politique de confidentialité',
-}
-
+// Transforme le markdown simple stocke en base en elements React lisibles.
 function renderLegalLine(line, index) {
   const trimmedLine = line.trim()
 
@@ -40,7 +36,7 @@ function renderLegalLine(line, index) {
   if (trimmedLine.startsWith('* ')) {
     return (
       <p className="ml-4 mt-2 text-sm font-bold leading-7 text-[#073f8f]" key={index}>
-        • {trimmedLine.replace('* ', '')}
+        * {trimmedLine.replace('* ', '')}
       </p>
     )
   }
@@ -55,7 +51,7 @@ function renderLegalLine(line, index) {
 /**
  * Fenetre modale qui affiche les textes legaux stockes dans la table regles.
  */
-export function LegalModal({ type, onClose }) {
+export function LegalModal({ labels, type, onClose }) {
   const [regles, setRegles] = useState(null)
   const [error, setError] = useState('')
 
@@ -66,6 +62,7 @@ export function LegalModal({ type, onClose }) {
 
     let isMounted = true
 
+    // Les textes legaux sont administres cote backend dans la table regles.
     apiRequest('/regles')
       .then((payload) => {
         if (isMounted) {
@@ -75,15 +72,16 @@ export function LegalModal({ type, onClose }) {
       })
       .catch(() => {
         if (isMounted) {
-          setError("Impossible de charger le texte depuis l'API.")
+          setError(labels.error)
         }
       })
 
     return () => {
       isMounted = false
     }
-  }, [type])
+  }, [labels.error, type])
 
+  // La cle type choisit conditions ou politique dans la reponse API.
   const content = regles?.[type] ?? ''
   const lines = useMemo(() => content.split('\n'), [content])
 
@@ -92,11 +90,7 @@ export function LegalModal({ type, onClose }) {
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 px-4 py-8"
-      onClick={onClose}
-      role="presentation"
-    >
+    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/55 px-4 py-8" onClick={onClose} role="presentation">
       <section
         aria-labelledby="legal-modal-title"
         aria-modal="true"
@@ -106,20 +100,20 @@ export function LegalModal({ type, onClose }) {
       >
         <header className="flex items-center justify-between gap-4 border-b border-slate-200 px-5 py-4 sm:px-7">
           <h2 className="text-lg font-black text-[#061d49]" id="legal-modal-title">
-            {modalTitles[type]}
+            {labels.titles[type]}
           </h2>
           <button
-            aria-label="Fermer la fenêtre"
+            aria-label={labels.close}
             className="focus-ring grid h-9 w-9 place-items-center rounded-md border border-slate-200 text-xl font-black text-[#073f8f] hover:bg-blue-50"
             onClick={onClose}
             type="button"
           >
-            ×
+            x
           </button>
         </header>
 
         <div className="max-h-[72vh] overflow-y-auto px-5 py-6 sm:px-8">
-          {!regles && !error && <p className="text-sm font-bold text-slate-950">Chargement...</p>}
+          {!regles && !error && <p className="text-sm font-bold text-slate-950">{labels.loading}</p>}
           {error && <p className="text-sm font-bold text-red-600">{error}</p>}
           {regles && <div>{lines.map(renderLegalLine)}</div>}
         </div>
