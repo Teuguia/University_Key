@@ -25,7 +25,7 @@ class AdminDashboardController extends Controller
 
         if (! $user->isAdmin()) {
             return response()->json([
-                'message' => 'Ce tableau de bord est reserve aux administrateurs.',
+                'message' => 'Ce tableau de bord est reservé aux administrateurs.',
             ], 403);
         }
 
@@ -36,8 +36,8 @@ class AdminDashboardController extends Controller
                     'role_label' => 'Super administrateur',
                 ],
                 'metrics' => [
-                    'students' => $this->countUsersByRole('etudiant'),
-                    'active_counselors' => $this->countUsersByRole('conseiller', 'actif'),
+                    'students' => $this->countUsersByRole('etudiant'),// pour afficher le nombre étudiants
+                    'active_counselors' => $this->countUsersByRole('conseiller', 'actif'),// pour afficher uniquement les conseillers actifs
                     'pending_accounts' => $this->countUsersByStatus('en_attente'),
                     'tests_completed' => $this->countCompletedTests(),
                     'schools' => $this->countSchools(),
