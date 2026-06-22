@@ -8,6 +8,7 @@ import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { CounselorDashboardPage } from './pages/counselor/CounselorDashboardPage'
+import { CommunicationsPage } from './pages/communications/CommunicationsPage'
 import { EtablissementDetailPage } from './pages/public/EtablissementDetailPage'
 import { HomePage } from './pages/public/HomePage'
 import { StudentDashboardPage } from './pages/student/StudentDashboardPage'
@@ -34,6 +35,10 @@ function getActivePage() {
 
   if (['conseiller', 'counselor', 'counselor-dashboard'].includes(hash)) {
     return 'counselor-dashboard'
+  }
+
+  if (['communications', 'messages', 'messagerie'].includes(hash)) {
+    return 'communications'
   }
 
   if (/^etablissement-\d+$/.test(hash)) {
@@ -93,6 +98,7 @@ function App() {
         {activePage === 'admin-dashboard' && <AdminDashboardPage />}
         {activePage === 'counselor-dashboard' && <CounselorDashboardPage labels={labels.counselorDashboard} />}
         {activePage === 'student-dashboard' && <StudentDashboardPage labels={labels.dashboard} />}
+        {activePage === 'communications' && <CommunicationsPage />}
         {activePage === 'etablissement-detail' && <EtablissementDetailPage etablissementId={getActiveEtablissementId()} />}
         {activePage === 'home' && <HomePage labels={labels} />}
       </main>

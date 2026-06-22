@@ -163,7 +163,7 @@ export function CounselorDashboardPage({ labels }) {
                 {labels.dashboard}
               </a>
               {labels.nav.map((item, index) => (
-                <a className="flex min-h-11 items-center gap-3 rounded-md px-4 text-sm font-bold text-blue-50 hover:bg-white/10" href="#conseiller" key={item}>
+                <a className="flex min-h-11 items-center gap-3 rounded-md px-4 text-sm font-bold text-blue-50 hover:bg-white/10" href={index === 1 ? '#communications' : '#conseiller'} key={item}>
                   <CounselorIcon className="h-5 w-5" name={navIcons[index]} />
                   {item}
                   {item === labels.nav[1] && metrics.unread_messages > 0 && (

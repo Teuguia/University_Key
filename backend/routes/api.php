@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\CommunicationController;
 use App\Http\Controllers\Api\V1\Public\EtablissementController;
 use App\Http\Controllers\Api\V1\Public\RegleController;
 use App\Http\Controllers\Api\V1\Public\SearchController;
@@ -59,5 +60,22 @@ Route::prefix('v1')->group(function () {
     // Routes privees de l'espace conseiller, accessibles apres validation du compte.
     Route::middleware(['auth:sanctum', 'can:access-active-account'])->prefix('counselor')->group(function () {
         Route::get('/dashboard', [CounselorDashboardController::class, 'show']);
+    });
+
+    // Echanges prives et appels audio WebRTC entre un etudiant et un conseiller.
+    Route::middleware(['auth:sanctum', 'can:access-active-account'])->prefix('communications')->group(function () {
+        Route::get('/contacts', [CommunicationController::class, 'contacts']);
+        Route::get('/conversations', [CommunicationController::class, 'index']);
+        Route::post('/conversations', [CommunicationController::class, 'storeConversation']);
+        Route::get('/conversations/{conversation}', [CommunicationController::class, 'show']);
+        Route::post('/conversations/{conversation}/messages', [CommunicationController::class, 'storeMessage']);
+        Route::get('/notifications', [CommunicationController::class, 'notifications']);
+        Route::patch('/notifications/read-all', [CommunicationController::class, 'markAllNotificationsRead']);
+        Route::patch('/notifications/{notification}/read', [CommunicationController::class, 'markNotificationRead']);
+        Route::post('/conversations/{conversation}/calls', [CommunicationController::class, 'startCall']);
+        Route::get('/calls/incoming', [CommunicationController::class, 'incomingCalls']);
+        Route::get('/calls/{call}', [CommunicationController::class, 'showCall']);
+        Route::patch('/calls/{call}/answer', [CommunicationController::class, 'answerCall']);
+        Route::patch('/calls/{call}/finish', [CommunicationController::class, 'finishCall']);
     });
 });

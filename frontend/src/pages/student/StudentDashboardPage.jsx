@@ -347,7 +347,7 @@ export function StudentDashboardPage({ labels }) {
                 className={`flex min-h-12 items-center gap-3 rounded-md px-4 text-sm font-black ${
                   index === 0 ? 'bg-blue-50 text-[#074fb2]' : 'text-[#061d49] hover:bg-slate-50'
                 }`}
-                href="#dashboard"
+                href={index === 7 || index === 8 ? '#communications' : '#dashboard'}
                 key={label}
               >
                 <DashboardIcon className="h-5 w-5 shrink-0" name={navIcons[index]} />
