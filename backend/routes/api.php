@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Public\RegleController;
 use App\Http\Controllers\Api\V1\Public\SearchController;
 use App\Http\Controllers\Api\V1\Admin\AdminDashboardController;
 use App\Http\Controllers\Api\V1\Admin\OrientationTestController;
+use App\Http\Controllers\Api\V1\Admin\RegleController as AdminRegleController;
 use App\Http\Controllers\Api\V1\Counselor\CounselorDashboardController;
 use App\Http\Controllers\Api\V1\Student\StudentDashboardController;
 
@@ -42,6 +43,8 @@ Route::prefix('v1')->group(function () {
     // Routes privees de supervision reservees aux administrateurs.
     Route::middleware(['auth:sanctum', 'can:access-active-account'])->prefix('admin')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'show']);
+        Route::get('/regles', [AdminRegleController::class, 'show']);
+        Route::patch('/regles', [AdminRegleController::class, 'update']);
         Route::get('/activity-logs', [AdminDashboardController::class, 'activityLogs']);
         Route::get('/students', [AdminDashboardController::class, 'students']);
         Route::get('/counselors', [AdminDashboardController::class, 'counselors']);

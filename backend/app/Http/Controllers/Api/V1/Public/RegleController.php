@@ -13,12 +13,13 @@ class RegleController extends Controller
      */
     public function show(): JsonResponse
     {
-        $regle = DB::table('regles')->first(['conditions', 'politique']);
+        $regle = DB::table('regles')->orderBy('id')->first(['conditions', 'politique', 'updated_at']);
 
         return response()->json([
             'data' => [
                 'conditions' => $regle?->conditions ?? '',
                 'politique' => $regle?->politique ?? '',
+                'updated_at' => $regle?->updated_at,
             ],
         ]);
     }

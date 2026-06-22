@@ -16,7 +16,7 @@ const sidebarGroups = [
       { id: 'messages', icon: 'mail', label: 'Messagerie', target: 'admin-overview', badge: 'messages' },
       { id: 'reports', icon: 'flag', label: 'Signalements', target: 'admin-alerts', badge: 'open_reports' },
       { id: 'validation', icon: 'shield', label: 'Validation des comptes', target: 'admin-detail-view', badge: 'pending_accounts', view: 'pending' },
-      { id: 'privacy', icon: 'lock', label: 'Confidentialite & consentements', target: 'admin-alerts' },
+      { id: 'privacy', icon: 'lock', label: 'Confidentialite & consentements', target: 'admin-legal-rules', panel: 'legal-rules' },
     ],
   },
   {
@@ -151,6 +151,12 @@ function formatNumber(value) {
   return new Intl.NumberFormat('fr-FR').format(value ?? 0)
 }
 
+function formatDate(value) {
+  return value
+    ? new Intl.DateTimeFormat('fr-FR', { day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(value))
+    : '-'
+}
+
 // Cree les initiales du compte admin pour les avatars texte.
 function initials(name = '') {
   return name
@@ -266,6 +272,9 @@ export function AdminDashboardPage() {
   const [detailRows, setDetailRows] = useState([])
   const [detailStatus, setDetailStatus] = useState({ state: 'idle', message: '' })
   const [schoolEdits, setSchoolEdits] = useState({})
+  const [legalRules, setLegalRules] = useState({ conditions: '', politique: '', updated_at: null })
+  const [legalStatus, setLegalStatus] = useState({ state: 'idle', message: '' })
+  const [isLegalManagerOpen, setIsLegalManagerOpen] = useState(false)
 
   useEffect(() => {
     let isMounted = true
@@ -361,6 +370,11 @@ export function AdminDashboardPage() {
       return
     }
 
+    if (item.panel === 'legal-rules') {
+      openLegalRules()
+      return
+    }
+
     if (item.view) {
       loadDetailView(item.view)
       return
@@ -368,6 +382,7 @@ export function AdminDashboardPage() {
 
     setActiveDetailView(null)
     setIsTestManagerOpen(false)
+    setIsLegalManagerOpen(false)
     window.setTimeout(() => document.getElementById(item.target)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
   }
 
@@ -379,6 +394,7 @@ export function AdminDashboardPage() {
   async function openTestManager() {
     setActiveDetailView(null)
     setIsTestManagerOpen(true)
+    setIsLegalManagerOpen(false)
     setTestStatus({ state: 'loading', message: '' })
 
     try {
@@ -387,6 +403,38 @@ export function AdminDashboardPage() {
       window.setTimeout(() => document.getElementById('admin-tests')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
     } catch (error) {
       setTestStatus({ state: 'error', message: error.message })
+    }
+  }
+
+  async function openLegalRules() {
+    setActiveDetailView(null)
+    setIsTestManagerOpen(false)
+    setIsLegalManagerOpen(true)
+    setLegalStatus({ state: 'loading', message: '' })
+
+    try {
+      const payload = await apiRequest('/admin/regles')
+      setLegalRules(payload.data ?? { conditions: '', politique: '', updated_at: null })
+      setLegalStatus({ state: 'ready', message: '' })
+      window.setTimeout(() => document.getElementById('admin-legal-rules')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
+    } catch (error) {
+      setLegalStatus({ state: 'error', message: error.message })
+    }
+  }
+
+  async function saveLegalRules(event) {
+    event.preventDefault()
+    setLegalStatus({ state: 'loading', message: '' })
+
+    try {
+      const payload = await apiRequest('/admin/regles', {
+        method: 'PATCH',
+        body: JSON.stringify({ conditions: legalRules.conditions, politique: legalRules.politique }),
+      })
+      setLegalRules(payload.data)
+      setLegalStatus({ state: 'success', message: payload.message })
+    } catch (error) {
+      setLegalStatus({ state: 'error', message: error.message })
     }
   }
 
@@ -1242,6 +1290,49 @@ export function AdminDashboardPage() {
               </section>
             )}
 
+            {isLegalManagerOpen && (
+              <section className="mt-5 scroll-mt-24" id="admin-legal-rules">
+                <Panel title="Confidentialite et consentements">
+                  <form className="grid gap-5" onSubmit={saveLegalRules}>
+                    <div className="rounded-md bg-blue-50 px-4 py-3 text-sm font-bold text-[#073f8f]">
+                      Ces textes sont publies dans les boutons de consentement a l inscription et dans le pied de page. La syntaxe Markdown simple (#, ## et *) est prise en charge.
+                    </div>
+                    {legalStatus.message && (
+                      <p className={`rounded-md px-4 py-3 text-sm font-bold ${legalStatus.state === 'error' ? 'bg-red-50 text-red-700' : legalStatus.state === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-600'}`}>
+                        {legalStatus.message}
+                      </p>
+                    )}
+                    <label className="block">
+                      <span className="text-sm font-black text-[#061d49]">Consentement et conditions d utilisation</span>
+                      <span className="mt-1 block text-xs font-bold text-slate-500">Texte accepte par l utilisateur lors de la creation de son compte.</span>
+                      <textarea
+                        className="mt-3 min-h-72 w-full rounded-md border border-slate-200 px-4 py-3 font-mono text-sm leading-6 text-slate-800 outline-none focus:border-[#074fb2] focus:ring-4 focus:ring-blue-100"
+                        onChange={(event) => setLegalRules((current) => ({ ...current, conditions: event.target.value }))}
+                        required
+                        value={legalRules.conditions}
+                      />
+                    </label>
+                    <label className="block">
+                      <span className="text-sm font-black text-[#061d49]">Politique de confidentialite</span>
+                      <span className="mt-1 block text-xs font-bold text-slate-500">Texte affiche par le bouton Confidentialite et dans le pied de page.</span>
+                      <textarea
+                        className="mt-3 min-h-72 w-full rounded-md border border-slate-200 px-4 py-3 font-mono text-sm leading-6 text-slate-800 outline-none focus:border-[#074fb2] focus:ring-4 focus:ring-blue-100"
+                        onChange={(event) => setLegalRules((current) => ({ ...current, politique: event.target.value }))}
+                        required
+                        value={legalRules.politique}
+                      />
+                    </label>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-xs font-bold text-slate-500">Derniere publication : {legalRules.updated_at ? formatDate(legalRules.updated_at) : 'non disponible'}</p>
+                      <button className="min-h-11 rounded-md bg-[#073f8f] px-5 text-sm font-black text-white disabled:opacity-60" disabled={legalStatus.state === 'loading'} type="submit">
+                        {legalStatus.state === 'loading' ? 'Publication en cours...' : 'Publier les modifications'}
+                      </button>
+                    </div>
+                  </form>
+                </Panel>
+              </section>
+            )}
+
             <div className="mt-5 grid gap-5 xl:grid-cols-[1.2fr_0.8fr_0.85fr]">
               <Panel title="Evolution des inscriptions">
                 {/* Graphique simple en CSS en attendant une bibliotheque de charting. */}
@@ -1296,7 +1387,7 @@ export function AdminDashboardPage() {
               </Panel>
             </div>
 
-            {(activeDetailView === 'pending' || isTestManagerOpen || ['reports', 'privacy', 'database', 'security'].includes(activeSidebarItem)) && (
+            {(activeDetailView === 'pending' || isTestManagerOpen || ['reports', 'database', 'security'].includes(activeSidebarItem)) && (
               <div className="mt-5 grid gap-5 xl:grid-cols-[1fr_0.7fr_0.75fr]">
               {activeDetailView === 'pending' && (
                 <Panel action="Voir tout" title="Comptes en attente de validation">
@@ -1356,7 +1447,7 @@ export function AdminDashboardPage() {
                 </Panel>
               )}
 
-              {['reports', 'privacy', 'database', 'security'].includes(activeSidebarItem) && (
+              {['reports', 'database', 'security'].includes(activeSidebarItem) && (
                 <Panel title="Alertes systeme">
                 <span id="admin-alerts" className="block scroll-mt-24" />
                 {/* Alertes synthetiques pour l'etat de securite et de maintenance. */}
