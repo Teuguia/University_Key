@@ -85,6 +85,55 @@ const detailViews = {
   logs: { title: "Journal d'activite administrateur", endpoint: '/admin/activity-logs' },
 }
 
+const adminEnglish = {
+  'Gestion': 'Management',
+  'Systeme': 'System',
+  'Utilisateurs': 'Users',
+  'Etudiants': 'Students',
+  'Conseillers': 'Counselors',
+  'Etablissements': 'Institutions',
+  'Filieres & metiers': 'Programs & careers',
+  "Tests d'orientation": 'Orientation tests',
+  'Resultats & recommandations': 'Results & recommendations',
+  'Messagerie': 'Messaging',
+  'Signalements': 'Reports',
+  'Validation des comptes': 'Account validation',
+  'Confidentialite & consentements': 'Privacy & consent',
+  "Logs d'activite": 'Activity logs',
+  'Base de donnees': 'Database',
+  'Securite': 'Security',
+  'Parametres': 'Settings',
+  'Tableau de bord': 'Dashboard',
+  'Bonjour Administrateur': 'Hello Administrator',
+  'Vue globale de la plateforme University Key': 'University Key platform overview',
+  'Rechercher une ecole, une ville, une filiere...': 'Search for an institution, city, or program...',
+  'Etudiants inscrits': 'Registered students',
+  'Conseillers actifs': 'Active counselors',
+  'Comptes en attente': 'Pending accounts',
+  'Tests effectues': 'Completed tests',
+  'Ecoles enregistrees': 'Registered institutions',
+  'Signalements ouverts': 'Open reports',
+  'Cliquer pour voir la liste': 'Click to view the list',
+  'Cliquer pour valider': 'Click to validate',
+  'Cliquer pour voir les passages': 'Click to view sessions',
+  'Cliquer pour modifier': 'Click to edit',
+  'a surveiller': 'to monitor',
+  'Confidentialite et consentements': 'Privacy and consent',
+  'Consentement et conditions d utilisation': 'Consent and terms of use',
+  'Politique de confidentialite': 'Privacy policy',
+  'Publier les modifications': 'Publish changes',
+  'Publication en cours...': 'Publishing...',
+  'Derniere publication :': 'Last publication:',
+  'non disponible': 'unavailable',
+  'Texte accepte par l utilisateur lors de la creation de son compte.': 'Text accepted by users when creating an account.',
+  'Texte affiche par le bouton Confidentialite et dans le pied de page.': 'Text shown by the Privacy button and in the footer.',
+  'Ces textes sont publies dans les boutons de consentement a l inscription et dans le pied de page. La syntaxe Markdown simple (#, ## et *) est prise en charge.': 'These texts are published in registration consent buttons and the footer. Simple Markdown (#, ## and *) is supported.',
+}
+
+function adminText(value, language) {
+  return language === 'en' ? (adminEnglish[value] ?? value) : value
+}
+
 function createChoice(order = 1) {
   return {
     libelle: '',
@@ -253,7 +302,7 @@ function Panel({ title, action, children }) {
 /**
  * Affiche le tableau de bord administrateur global.
  */
-export function AdminDashboardPage() {
+export function AdminDashboardPage({ language = 'fr' }) {
   // Le fallback evite un ecran vide pendant que les donnees admin arrivent de l'API.
   const [dashboard, setDashboard] = useState(fallbackData)
   const [status, setStatus] = useState({ state: 'loading', message: '' })
@@ -275,6 +324,7 @@ export function AdminDashboardPage() {
   const [legalRules, setLegalRules] = useState({ conditions: '', politique: '', updated_at: null })
   const [legalStatus, setLegalStatus] = useState({ state: 'idle', message: '' })
   const [isLegalManagerOpen, setIsLegalManagerOpen] = useState(false)
+  const t = (value) => adminText(value, language)
 
   useEffect(() => {
     let isMounted = true
@@ -906,11 +956,11 @@ export function AdminDashboardPage() {
               type="button"
             >
               <AdminIcon name="home" />
-              Tableau de bord
+              {t('Tableau de bord')}
             </button>
             {sidebarGroups.map((group) => (
               <div className="mt-6" key={group.title}>
-                <p className="px-3 text-xs font-black uppercase text-blue-200">{group.title}</p>
+                <p className="px-3 text-xs font-black uppercase text-blue-200">{t(group.title)}</p>
                 <div className="mt-2 space-y-1">
                   {group.items.map((item) => {
                     const badge = sidebarBadge(item)
@@ -924,7 +974,7 @@ export function AdminDashboardPage() {
                         type="button"
                       >
                         <AdminIcon className="h-5 w-5 shrink-0" name={item.icon} />
-                        <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                        <span className="min-w-0 flex-1 truncate">{t(item.label)}</span>
                         {badge ? (
                           <span className={`grid h-5 min-w-5 place-items-center rounded-md px-1 text-[10px] font-black ${item.badge === 'pending_accounts' ? 'bg-orange-500 text-white' : item.badge === 'open_reports' ? 'bg-emerald-500 text-white' : 'bg-blue-100 text-[#06265c]'}`}>
                             {badge}
@@ -965,7 +1015,7 @@ export function AdminDashboardPage() {
                       setIsSearchOpen(true)
                     }}
                     onFocus={() => setIsSearchOpen(true)}
-                    placeholder="Rechercher une ecole, une ville, une filiere..."
+                    placeholder={t('Rechercher une ecole, une ville, une filiere...')}
                     value={searchQuery}
                   />
                 </div>
@@ -1035,8 +1085,8 @@ export function AdminDashboardPage() {
 
             <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <h1 className="text-3xl font-black text-[#061d49]">Bonjour Administrateur</h1>
-                <p className="mt-1 text-sm font-bold text-slate-500">Vue globale de la plateforme University Key</p>
+                <h1 className="text-3xl font-black text-[#061d49]">{t('Bonjour Administrateur')}</h1>
+                <p className="mt-1 text-sm font-bold text-slate-500">{t('Vue globale de la plateforme University Key')}</p>
               </div>
               <div className="flex flex-wrap gap-3">
                 <span className="inline-flex min-h-11 items-center gap-2 rounded-md border border-slate-200 bg-white px-4 text-sm font-black text-[#061d49]">
@@ -1052,12 +1102,12 @@ export function AdminDashboardPage() {
 
             {/* Indicateurs alimentes par l'API admin: utilisateurs, tests, ecoles et signalements. */}
             <section className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
-              <ClickableMetricCard active={activeDetailView === 'students'} icon="users" label="Etudiants inscrits" onClick={() => loadDetailView('students')} tone="bg-blue-50 text-blue-700" trend="Cliquer pour voir la liste" value={metrics.students} />
-              <ClickableMetricCard active={activeDetailView === 'counselors'} icon="users" label="Conseillers actifs" onClick={() => loadDetailView('counselors')} tone="bg-emerald-50 text-emerald-700" trend="Cliquer pour voir la liste" value={metrics.active_counselors} />
-              <ClickableMetricCard active={activeDetailView === 'pending'} icon="shield" label="Comptes en attente" onClick={() => loadDetailView('pending')} tone="bg-orange-50 text-orange-700" trend="Cliquer pour valider" value={metrics.pending_accounts} />
-              <ClickableMetricCard active={activeDetailView === 'tests'} icon="clipboard" label="Tests effectues" onClick={() => loadDetailView('tests')} tone="bg-violet-50 text-violet-700" trend="Cliquer pour voir les passages" value={metrics.tests_completed} />
-              <ClickableMetricCard active={activeDetailView === 'schools'} icon="school" label="Ecoles enregistrees" onClick={() => loadDetailView('schools')} tone="bg-blue-50 text-blue-700" trend="Cliquer pour modifier" value={metrics.schools} />
-              <MetricCard icon="flag" label="Signalements ouverts" tone="bg-red-50 text-red-700" trend="a surveiller" value={metrics.open_reports} />
+              <ClickableMetricCard active={activeDetailView === 'students'} icon="users" label={t('Etudiants inscrits')} onClick={() => loadDetailView('students')} tone="bg-blue-50 text-blue-700" trend={t('Cliquer pour voir la liste')} value={metrics.students} />
+              <ClickableMetricCard active={activeDetailView === 'counselors'} icon="users" label={t('Conseillers actifs')} onClick={() => loadDetailView('counselors')} tone="bg-emerald-50 text-emerald-700" trend={t('Cliquer pour voir la liste')} value={metrics.active_counselors} />
+              <ClickableMetricCard active={activeDetailView === 'pending'} icon="shield" label={t('Comptes en attente')} onClick={() => loadDetailView('pending')} tone="bg-orange-50 text-orange-700" trend={t('Cliquer pour valider')} value={metrics.pending_accounts} />
+              <ClickableMetricCard active={activeDetailView === 'tests'} icon="clipboard" label={t('Tests effectues')} onClick={() => loadDetailView('tests')} tone="bg-violet-50 text-violet-700" trend={t('Cliquer pour voir les passages')} value={metrics.tests_completed} />
+              <ClickableMetricCard active={activeDetailView === 'schools'} icon="school" label={t('Ecoles enregistrees')} onClick={() => loadDetailView('schools')} tone="bg-blue-50 text-blue-700" trend={t('Cliquer pour modifier')} value={metrics.schools} />
+              <MetricCard icon="flag" label={t('Signalements ouverts')} tone="bg-red-50 text-red-700" trend={t('a surveiller')} value={metrics.open_reports} />
             </section>
 
             {activeDetailView && (
@@ -1292,10 +1342,10 @@ export function AdminDashboardPage() {
 
             {isLegalManagerOpen && (
               <section className="mt-5 scroll-mt-24" id="admin-legal-rules">
-                <Panel title="Confidentialite et consentements">
+                <Panel title={t('Confidentialite et consentements')}>
                   <form className="grid gap-5" onSubmit={saveLegalRules}>
                     <div className="rounded-md bg-blue-50 px-4 py-3 text-sm font-bold text-[#073f8f]">
-                      Ces textes sont publies dans les boutons de consentement a l inscription et dans le pied de page. La syntaxe Markdown simple (#, ## et *) est prise en charge.
+                      {t('Ces textes sont publies dans les boutons de consentement a l inscription et dans le pied de page. La syntaxe Markdown simple (#, ## et *) est prise en charge.')}
                     </div>
                     {legalStatus.message && (
                       <p className={`rounded-md px-4 py-3 text-sm font-bold ${legalStatus.state === 'error' ? 'bg-red-50 text-red-700' : legalStatus.state === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-600'}`}>
@@ -1303,8 +1353,8 @@ export function AdminDashboardPage() {
                       </p>
                     )}
                     <label className="block">
-                      <span className="text-sm font-black text-[#061d49]">Consentement et conditions d utilisation</span>
-                      <span className="mt-1 block text-xs font-bold text-slate-500">Texte accepte par l utilisateur lors de la creation de son compte.</span>
+                      <span className="text-sm font-black text-[#061d49]">{t('Consentement et conditions d utilisation')}</span>
+                      <span className="mt-1 block text-xs font-bold text-slate-500">{t('Texte accepte par l utilisateur lors de la creation de son compte.')}</span>
                       <textarea
                         className="mt-3 min-h-72 w-full rounded-md border border-slate-200 px-4 py-3 font-mono text-sm leading-6 text-slate-800 outline-none focus:border-[#074fb2] focus:ring-4 focus:ring-blue-100"
                         onChange={(event) => setLegalRules((current) => ({ ...current, conditions: event.target.value }))}
@@ -1313,8 +1363,8 @@ export function AdminDashboardPage() {
                       />
                     </label>
                     <label className="block">
-                      <span className="text-sm font-black text-[#061d49]">Politique de confidentialite</span>
-                      <span className="mt-1 block text-xs font-bold text-slate-500">Texte affiche par le bouton Confidentialite et dans le pied de page.</span>
+                      <span className="text-sm font-black text-[#061d49]">{t('Politique de confidentialite')}</span>
+                      <span className="mt-1 block text-xs font-bold text-slate-500">{t('Texte affiche par le bouton Confidentialite et dans le pied de page.')}</span>
                       <textarea
                         className="mt-3 min-h-72 w-full rounded-md border border-slate-200 px-4 py-3 font-mono text-sm leading-6 text-slate-800 outline-none focus:border-[#074fb2] focus:ring-4 focus:ring-blue-100"
                         onChange={(event) => setLegalRules((current) => ({ ...current, politique: event.target.value }))}
@@ -1323,9 +1373,9 @@ export function AdminDashboardPage() {
                       />
                     </label>
                     <div className="flex flex-wrap items-center justify-between gap-3">
-                      <p className="text-xs font-bold text-slate-500">Derniere publication : {legalRules.updated_at ? formatDate(legalRules.updated_at) : 'non disponible'}</p>
+                      <p className="text-xs font-bold text-slate-500">{t('Derniere publication :')} {legalRules.updated_at ? formatDate(legalRules.updated_at) : t('non disponible')}</p>
                       <button className="min-h-11 rounded-md bg-[#073f8f] px-5 text-sm font-black text-white disabled:opacity-60" disabled={legalStatus.state === 'loading'} type="submit">
-                        {legalStatus.state === 'loading' ? 'Publication en cours...' : 'Publier les modifications'}
+                        {legalStatus.state === 'loading' ? t('Publication en cours...') : t('Publier les modifications')}
                       </button>
                     </div>
                   </form>

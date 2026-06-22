@@ -95,7 +95,7 @@ function App() {
       <main id="main">
         {activePage === 'login' && <LoginPage labels={labels.auth} />}
         {activePage === 'register' && <RegisterPage labels={labels.auth} onOpenLegal={setLegalModalType} />}
-        {activePage === 'admin-dashboard' && <AdminDashboardPage />}
+        {activePage === 'admin-dashboard' && <AdminDashboardPage language={language} />}
         {activePage === 'counselor-dashboard' && <CounselorDashboardPage labels={labels.counselorDashboard} />}
         {activePage === 'student-dashboard' && <StudentDashboardPage labels={labels.dashboard} />}
         {activePage === 'communications' && <CommunicationsPage />}
