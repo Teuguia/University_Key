@@ -43,4 +43,9 @@ return [
         'token' => env('SMS_WEBHOOK_TOKEN'),
     ],
 
+    'verification' => [
+        'strict_delivery' => env('VERIFICATION_DELIVERY_STRICT', false),
+        'debug_codes' => env('VERIFICATION_DEBUG_CODES', false),
+    ],
+
 ];

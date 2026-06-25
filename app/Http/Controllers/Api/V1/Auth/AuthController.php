@@ -82,12 +82,13 @@ class AuthController extends Controller
                 $this->createVerificationCode($user, 'telephone', $user->telephone),
             ];
 
-            // En cas d'echec de distribution, la transaction annule aussi le compte.
+            $delivery = [];
+
             foreach ($codes as $code) {
-                $this->verificationDelivery->send($code['type'], $code['target'], $code['plain_code']);
+                $delivery[$code['type']] = $this->verificationDelivery->send($code['type'], $code['target'], $code['plain_code']);
             }
 
-            return ['user' => $user, 'codes' => $codes];
+            return ['user' => $user, 'codes' => $codes, 'delivery' => $delivery];
         });
 
         Log::info('auth.register.success', [
@@ -95,11 +96,20 @@ class AuthController extends Controller
             'ip' => $request->ip(),
         ]);
 
-        return response()->json([
+        $response = [
             'message' => 'Compte cree. Verifiez votre e-mail et votre numero de telephone pour l’activer.',
             'user' => $this->publicUser($registration['user']->loadMissing(['profilEtudiant', 'profilConseiller'])),
             'verification' => $this->verificationPayload($registration['user']),
-        ], 201);
+            'verification_delivery' => $registration['delivery'],
+        ];
+
+        if (config('services.verification.debug_codes')) {
+            $response['debug_verification_codes'] = collect($registration['codes'])
+                ->mapWithKeys(fn (array $code): array => [$code['type'] => $code['plain_code']])
+                ->all();
+        }
+
+        return response()->json($response, 201);
     }
 
     /**

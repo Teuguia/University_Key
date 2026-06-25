@@ -11,6 +11,13 @@ export function VerificationPage({ labels }) {
   const [identifier, setIdentifier] = useState(() => window.localStorage.getItem('university_key_verification_identifier') || '')
   const [type, setType] = useState('email')
   const [code, setCode] = useState('')
+  const [debugCodes] = useState(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem('university_key_debug_verification_codes') || 'null')
+    } catch {
+      return null
+    }
+  })
   const [status, setStatus] = useState({ type: '', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -28,6 +35,7 @@ export function VerificationPage({ labels }) {
       if (payload.token) {
         window.localStorage.setItem('university_key_token', payload.token)
         window.localStorage.removeItem('university_key_verification_identifier')
+        window.localStorage.removeItem('university_key_debug_verification_codes')
         window.location.hash = payload.user?.role === 'etudiant' ? 'dashboard' : 'home'
         return
       }
@@ -64,6 +72,14 @@ export function VerificationPage({ labels }) {
         <p className="text-xs font-black uppercase tracking-normal text-[#073f8f]">{labels.verificationEyebrow}</p>
         <h1 className="mt-3 text-3xl font-black text-[#061d49]">{labels.verificationPageTitle}</h1>
         <p className="mt-3 text-sm leading-6 text-slate-600">{labels.verificationPageText}</p>
+
+        {debugCodes && (
+          <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-800">
+            <p>Codes de test Cloud</p>
+            <p className="mt-1">E-mail : {debugCodes.email ?? 'non disponible'}</p>
+            <p>Telephone : {debugCodes.telephone ?? 'non disponible'}</p>
+          </div>
+        )}
 
         <label className="mt-7 block text-sm font-black text-[#06255a]">
           {type === 'email' ? labels.email : labels.phone}
