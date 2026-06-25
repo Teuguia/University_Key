@@ -185,9 +185,7 @@ class AuthController extends Controller
         /** @var User $user */
         $user = $result['user'];
         $response = [
-            'message' => $user->statut === 'actif'
-                ? 'Verification terminee. Votre compte est maintenant actif.'
-                : 'Verification terminee. Votre compte conseiller attend la validation administrative.',
+            'message' => $this->verificationMessage($user),
             'user' => $this->publicUser($user->loadMissing(['profilEtudiant', 'profilConseiller'])),
             'verification' => $this->verificationPayload($user),
         ];
@@ -378,6 +376,19 @@ class AuthController extends Controller
             'telephone_verified' => $user->telephone_verified_at !== null,
             'complete' => ! $user->verification_requise,
         ];
+    }
+
+    private function verificationMessage(User $user): string
+    {
+        if ($user->verification_requise) {
+            return 'Code valide. Verifiez aussi l’autre canal pour terminer l’activation du compte.';
+        }
+
+        if ($user->isConseiller()) {
+            return 'Verification terminee. Votre compte conseiller attend la validation administrative.';
+        }
+
+        return 'Verification terminee. Votre compte est maintenant actif.';
     }
 
     /**
