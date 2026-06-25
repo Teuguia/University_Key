@@ -4,7 +4,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
+$serveFrontendApplication = function () {
     $frontend = public_path('index.html');
 
     // En production, le script build-frontend copie le bundle React dans public.
@@ -14,4 +14,9 @@ Route::get('/', function () {
     }
 
     return view('welcome');
-});
+};
+
+Route::get('/', $serveFrontendApplication);
+
+Route::get('/{path}', $serveFrontendApplication)
+    ->where('path', '^(?!api|sanctum|storage|up).*$');
