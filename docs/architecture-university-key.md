@@ -226,39 +226,38 @@ frontend/
       globals.css
 ```
 
-### Backend
+### Backend Laravel
 
 ```text
-backend/
-  app/
-    Http/
-      Controllers/
-        Api/V1/
-          Auth/
-          Public/
-          Student/
-          Counselor/
-          Admin/
-      Middleware/
-      Requests/
-      Resources/
-    Models/
-    Policies/
-    Services/
-      Auth/
-      Orientation/
-      Verification/
-      Notifications/
-    Observers/
-  database/
-    migrations/
-    seeders/
-    factories/
-  routes/
-    api.php
-    web.php
-  storage/
-    app/private/justificatifs/
+app/
+  Http/
+    Controllers/
+      Api/V1/
+        Auth/
+        Public/
+        Student/
+        Counselor/
+        Admin/
+    Middleware/
+    Requests/
+    Resources/
+  Models/
+  Policies/
+  Services/
+    Auth/
+    Orientation/
+    Verification/
+    Notifications/
+  Observers/
+database/
+  migrations/
+  seeders/
+  factories/
+routes/
+  api.php
+  web.php
+storage/
+  app/private/justificatifs/
 ```
 
 ## 5. Premieres pages UI essentielles
@@ -301,4 +300,3 @@ backend/
 - Gestion des ecoles, filieres, opportunites et tests.
 - Gestion des pages legales.
 - Statistiques et logs d'activite.
-

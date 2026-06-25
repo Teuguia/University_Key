@@ -1,23 +1,26 @@
 # Dependencies
-backend/vendor/
+/vendor/
 frontend/node_modules/
 
 # Environment files
-backend/.env
+/.env
 frontend/.env
 *.env.local
 
 # Generated builds and caches
 frontend/dist/
-backend/public/build/
-backend/.phpunit.result.cache
+/public/build/
+/.phpunit.result.cache
 
 # Runtime logs
 *.log
-backend/storage/logs/
+/storage/logs/
 
 # OS and editor files
 .DS_Store
 Thumbs.db
 .idea/
 .vscode/
+
+# Legacy local folder kept out after moving Laravel to the repository root.
+/backend/

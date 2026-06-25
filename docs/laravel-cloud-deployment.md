@@ -1,7 +1,8 @@
 # Deploiement Laravel Cloud
 
-L'application Laravel se trouve dans `backend/` et le frontend React dans
-`frontend/`. Laravel Cloud doit utiliser `backend` comme repertoire de projet.
+L'application Laravel se trouve maintenant a la racine du depot et le frontend
+React reste dans `frontend/`. Laravel Cloud peut donc detecter directement le
+framework Laravel depuis le depot importe.
 
 Dans les reglages de l'environnement de production :
 
@@ -9,7 +10,7 @@ Dans les reglages de l'environnement de production :
 2. Attacher une base PostgreSQL Laravel Cloud et un cache Redis/KV Store.
 3. Selectionner une version Node recente (20 ou superieure).
 4. Ajouter `bash scripts/build-frontend.sh` aux **Build commands** pour compiler
-   le frontend React dans `backend/public`.
+   le frontend React dans `public`.
 5. Ajouter `php artisan migrate --force` aux **Deploy commands**.
 6. Definir au minimum : `APP_ENV=production`, `APP_DEBUG=false`, `APP_URL` avec
    le domaine Cloud, `SESSION_DRIVER=database`, `CACHE_STORE=database` et
@@ -20,7 +21,7 @@ Dans les reglages de l'environnement de production :
 
 ## Indexation Google
 
-Le fichier `backend/public/robots.txt` autorise tous les robots avec
+Le fichier `public/robots.txt` autorise tous les robots avec
 `Allow: /`. Le frontend fournit une balise `robots` avec `index,follow` et
 aucune directive `noindex` n'est ajoutee par l'application.
 
