@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: expose les details publics d'un etablissement valide.
+
 namespace App\Http\Controllers\Api\V1\Public;
 
 use App\Http\Controllers\Controller;

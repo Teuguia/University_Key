@@ -1,3 +1,5 @@
+// Commentaire d'intention: affiche le pied de page commun et les liens legaux.
+
 import { BrandIcon } from '../common/BrandIcon'
 
 /**

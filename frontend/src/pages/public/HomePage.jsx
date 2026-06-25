@@ -1,3 +1,5 @@
+// Commentaire d'intention: compose la page d'accueil publique de la plateforme.
+
 const heroImage = '/images/hero-student.png'
 
 // Composant interne pour reutiliser les icones SVG sans dependance externe.

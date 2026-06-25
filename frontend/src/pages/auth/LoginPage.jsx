@@ -1,3 +1,5 @@
+// Commentaire d'intention: affiche et traite le formulaire de connexion.
+
 import { useState } from 'react'
 import { BrandIcon } from '../../components/common/BrandIcon'
 import { apiRequest } from '../../services/apiClient'
@@ -22,6 +24,14 @@ function AuthIcon({ name, className = 'h-5 w-5' }) {
       <svg {...common}>
         <path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6S2 12 2 12Z" />
         <circle cx="12" cy="12" r="3" />
+      </svg>
+    ),
+    eyeOff: (
+      <svg {...common}>
+        <path d="M3 3l18 18" />
+        <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+        <path d="M9.9 5.2A10.8 10.8 0 0 1 12 5c6.5 0 10 7 10 7a16.8 16.8 0 0 1-3.1 4.2" />
+        <path d="M6.6 6.7C3.6 8.7 2 12 2 12s3.5 7 10 7a10.7 10.7 0 0 0 4.1-.8" />
       </svg>
     ),
     lock: (
@@ -54,6 +64,10 @@ function AuthIcon({ name, className = 'h-5 w-5' }) {
 
 // Champ de formulaire reutilisable avec icone, label localise et bouton visuel pour les mots de passe.
 function TextField({ icon, label, name, placeholder, type = 'text', autoComplete, showPasswordLabel }) {
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
+  const isPasswordField = type === 'password'
+  const inputType = isPasswordField && isPasswordVisible ? 'text' : type
+
   return (
     <label className="block">
       <span className="text-sm font-black text-[#06255a]">{label}</span>
@@ -64,11 +78,17 @@ function TextField({ icon, label, name, placeholder, type = 'text', autoComplete
           className="w-full border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400"
           name={name}
           placeholder={placeholder}
-          type={type}
+          type={inputType}
         />
-        {type === 'password' && (
-          <button className="text-slate-400" type="button" aria-label={showPasswordLabel}>
-            <AuthIcon className="h-4 w-4" name="eye" />
+        {isPasswordField && (
+          <button
+            aria-label={isPasswordVisible ? 'Masquer le mot de passe' : showPasswordLabel}
+            aria-pressed={isPasswordVisible}
+            className="text-slate-400 hover:text-[#073f8f]"
+            onClick={() => setIsPasswordVisible((visible) => !visible)}
+            type="button"
+          >
+            <AuthIcon className="h-4 w-4" name={isPasswordVisible ? 'eyeOff' : 'eye'} />
           </button>
         )}
       </span>

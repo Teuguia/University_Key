@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: routes API publiques et privees consommees par le frontend React.
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\V1\Auth\AuthController;
@@ -26,6 +28,8 @@ Route::prefix('v1')->group(function () {
         // Limite les tentatives publiques pour reduire le brute-force.
         Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:auth');
         Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:auth');
+        Route::post('/verification/verify', [AuthController::class, 'verifyCode'])->middleware('throttle:verification-code');
+        Route::post('/verification/resend', [AuthController::class, 'resendVerificationCode'])->middleware('throttle:verification-resend');
 
         // Sanctum protege les routes privees par token Bearer.
         Route::middleware(['auth:sanctum', 'can:access-active-account'])->group(function () {
@@ -38,6 +42,8 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'can:access-active-account'])->prefix('student')->group(function () {
         Route::get('/dashboard', [StudentDashboardController::class, 'show']);
         Route::post('/profile/photo', [StudentDashboardController::class, 'updatePhoto']);
+        Route::get('/orientation-tests/{test}', [StudentDashboardController::class, 'orientationTest']);
+        Route::post('/orientation-tests/{test}/submit', [StudentDashboardController::class, 'submitOrientationTest']);
     });
 
     // Routes privees de supervision reservees aux administrateurs.

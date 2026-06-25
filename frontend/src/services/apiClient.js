@@ -1,3 +1,5 @@
+// Commentaire d'intention: centralise les appels HTTP vers l'API Laravel.
+
 // En production, le frontend est servi par Laravel Cloud et appelle la meme origine.
 // En developpement, on conserve l'API Laravel locale par defaut.
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.PROD ? '/api/v1' : 'http://localhost:8000/api/v1')

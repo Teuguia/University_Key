@@ -1,3 +1,5 @@
+// Commentaire d'intention: assemble la navigation principale de l'application React.
+
 import { useEffect, useState } from 'react'
 import './App.css'
 import { Footer } from './components/layout/Footer'
@@ -6,12 +8,13 @@ import { LegalModal } from './components/legal/LegalModal'
 import { useLocalizedCopy } from './hooks/useLocalizedCopy'
 import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
+import { VerificationPage } from './pages/auth/VerificationPage'
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { CounselorDashboardPage } from './pages/counselor/CounselorDashboardPage'
 import { CommunicationsPage } from './pages/communications/CommunicationsPage'
 import { EtablissementDetailPage } from './pages/public/EtablissementDetailPage'
 import { HomePage } from './pages/public/HomePage'
-import { StudentDashboardPage } from './pages/student/StudentDashboardPage'
+import { StudentDashboardPage, StudentTestWindowPage } from './pages/student/StudentDashboardPage'
 
 // Convertit le hash courant en page interne de la SPA.
 function getActivePage() {
@@ -25,8 +28,16 @@ function getActivePage() {
     return 'register'
   }
 
+  if (['verification', 'verify'].includes(hash)) {
+    return 'verification'
+  }
+
   if (['dashboard', 'tableau-de-bord', 'student-dashboard'].includes(hash)) {
     return 'student-dashboard'
+  }
+
+  if (/^student-test-\d+$/.test(hash)) {
+    return 'student-test'
   }
 
   if (['admin', 'admin-dashboard', 'administration'].includes(hash)) {
@@ -51,6 +62,13 @@ function getActivePage() {
 // Extrait l'identifiant de la fiche etablissement depuis une ancre #etablissement-12.
 function getActiveEtablissementId() {
   const match = window.location.hash.replace('#', '').match(/^etablissement-(\d+)$/)
+
+  return match ? Number(match[1]) : null
+}
+
+// Extrait l'identifiant du test depuis une ancre #student-test-12.
+function getActiveStudentTestId() {
+  const match = window.location.hash.replace('#', '').match(/^student-test-(\d+)$/)
 
   return match ? Number(match[1]) : null
 }
@@ -83,27 +101,38 @@ function App() {
     document.documentElement.lang = language
   }, [language])
 
-  const isAuthPage = activePage === 'login' || activePage === 'register'
+  const isAuthPage = activePage === 'login' || activePage === 'register' || activePage === 'verification'
   const isAdminDashboard = activePage === 'admin-dashboard'
+  const isStudentTestWindow = activePage === 'student-test'
 
   return (
     <>
-      <a className="skip-link" href="#main">
-        {labels.skip}
-      </a>
-      <Header labels={labels} language={language} onLanguageChange={setLanguage} showAuthActions={!isAdminDashboard} />
+      {!isStudentTestWindow && (
+        <>
+          <a className="skip-link" href="#main">
+            {labels.skip}
+          </a>
+          <Header labels={labels} language={language} onLanguageChange={setLanguage} showAuthActions={!isAdminDashboard} />
+        </>
+      )}
       <main id="main">
         {activePage === 'login' && <LoginPage labels={labels.auth} />}
         {activePage === 'register' && <RegisterPage labels={labels.auth} onOpenLegal={setLegalModalType} />}
+        {activePage === 'verification' && <VerificationPage labels={labels.auth} />}
         {activePage === 'admin-dashboard' && <AdminDashboardPage language={language} />}
         {activePage === 'counselor-dashboard' && <CounselorDashboardPage labels={labels.counselorDashboard} />}
         {activePage === 'student-dashboard' && <StudentDashboardPage labels={labels.dashboard} />}
+        {activePage === 'student-test' && <StudentTestWindowPage labels={labels.dashboard} testId={getActiveStudentTestId()} />}
         {activePage === 'communications' && <CommunicationsPage />}
         {activePage === 'etablissement-detail' && <EtablissementDetailPage etablissementId={getActiveEtablissementId()} />}
         {activePage === 'home' && <HomePage labels={labels} />}
       </main>
-      <Footer labels={labels} onOpenLegal={setLegalModalType} variant={isAuthPage ? 'dark' : 'light'} />
-      <LegalModal labels={labels.legalModal} onClose={() => setLegalModalType(null)} type={legalModalType} />
+      {!isStudentTestWindow && (
+        <>
+          <Footer labels={labels} onOpenLegal={setLegalModalType} variant={isAuthPage ? 'dark' : 'light'} />
+          <LegalModal labels={labels.legalModal} onClose={() => setLegalModalType(null)} type={legalModalType} />
+        </>
+      )}
     </>
   )
 }

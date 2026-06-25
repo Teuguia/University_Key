@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: valide les identifiants fournis au formulaire de connexion.
+
 namespace App\Http\Requests\Api\V1\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;

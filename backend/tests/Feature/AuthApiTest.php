@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
+use App\Models\CodeVerification;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Tests\TestCase;
@@ -45,16 +46,19 @@ class AuthApiTest extends TestCase
     }
 
     /**
-     * Verifie que l'inscription cree un utilisateur, hash le mot de passe et retourne un token Sanctum.
+     * L'inscription ne doit jamais donner de token avant la double verification.
      */
-    public function test_student_can_register_and_receive_token(): void
+    public function test_student_registration_requires_double_verification_without_token(): void
     {
+        $email = 'marie.'.uniqid().'@example.com';
+        $telephone = '69'.random_int(1000000, 9999999);
+
         $response = $this->postJson('/api/v1/auth/register', [
             'role' => 'etudiant',
             'prenom' => 'Marie',
             'nom' => 'Ngono',
-            'email' => 'marie.ngono@example.com',
-            'telephone' => '690232871',
+            'email' => $email,
+            'telephone' => $telephone,
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
             'conditions_acceptees' => true,
@@ -62,17 +66,102 @@ class AuthApiTest extends TestCase
 
         $response
             ->assertCreated()
-            ->assertJsonStructure(['token', 'user' => ['id', 'email', 'role', 'statut']]);
+            ->assertJsonStructure(['user' => ['id', 'email', 'role', 'statut'], 'verification']);
 
-        $user = User::query()->where('email', 'marie.ngono@example.com')->firstOrFail();
+        $this->assertNull($response->json('token'));
+
+        $user = User::query()->where('email', $email)->firstOrFail();
 
         $this->assertTrue(Hash::check('secret123', $user->password));
+        $this->assertSame('en_attente', $user->statut);
+        $this->assertTrue($user->verification_requise);
         $this->assertDatabaseHas('profils_etudiants', [
             'user_id' => $user->id,
             'prenom' => 'Marie',
             'nom' => 'Ngono',
         ]);
-        $this->assertDatabaseCount('codes_verification', 2);
+        $codes = CodeVerification::query()->where('user_id', $user->id)->get();
+        $this->assertCount(2, $codes);
+        $this->assertTrue($codes->every(fn (CodeVerification $code): bool => strlen($code->code) > 6));
+    }
+
+    public function test_student_receives_token_only_after_both_codes_are_verified(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'verify@example.com',
+            'telephone' => '690000001',
+            'role' => 'etudiant',
+            'statut' => 'en_attente',
+            'verification_requise' => true,
+            'email_verified_at' => null,
+            'telephone_verified_at' => null,
+        ]);
+
+        CodeVerification::query()->create([
+            'user_id' => $user->id,
+            'code' => Hash::make('111111'),
+            'type' => 'email',
+            'cible' => $user->email,
+            'statut' => 'en_attente',
+            'expire_le' => now()->addMinutes(15),
+        ]);
+        CodeVerification::query()->create([
+            'user_id' => $user->id,
+            'code' => Hash::make('222222'),
+            'type' => 'telephone',
+            'cible' => $user->telephone,
+            'statut' => 'en_attente',
+            'expire_le' => now()->addMinutes(15),
+        ]);
+
+        $this->postJson('/api/v1/auth/verification/verify', [
+            'identifiant' => $user->email,
+            'type' => 'email',
+            'code' => '111111',
+        ])->assertOk()->assertJsonPath('verification.complete', false);
+
+        $this->assertNull($user->fresh()->telephone_verified_at);
+
+        $response = $this->postJson('/api/v1/auth/verification/verify', [
+            'identifiant' => $user->telephone,
+            'type' => 'telephone',
+            'code' => '222222',
+            'device_name' => 'test-suite',
+        ]);
+
+        $response->assertOk()->assertJsonStructure(['token', 'user' => ['id', 'statut']]);
+        $this->assertSame('actif', $user->fresh()->statut);
+        $this->assertFalse($user->fresh()->verification_requise);
+    }
+
+    public function test_otp_is_invalidated_after_five_incorrect_attempts(): void
+    {
+        $user = User::factory()->create([
+            'email' => 'attempts@example.com',
+            'telephone' => '690000002',
+            'role' => 'etudiant',
+            'statut' => 'en_attente',
+            'verification_requise' => true,
+        ]);
+        $verification = CodeVerification::query()->create([
+            'user_id' => $user->id,
+            'code' => Hash::make('333333'),
+            'type' => 'email',
+            'cible' => $user->email,
+            'statut' => 'en_attente',
+            'expire_le' => now()->addMinutes(15),
+        ]);
+
+        foreach (range(1, 5) as $attempt) {
+            $this->postJson('/api/v1/auth/verification/verify', [
+                'identifiant' => $user->email,
+                'type' => 'email',
+                'code' => '000000',
+            ])->assertUnprocessable();
+        }
+
+        $this->assertSame('expire', $verification->fresh()->statut);
+        $this->assertSame(5, $verification->fresh()->nb_tentatives);
     }
 
     /**
@@ -80,12 +169,15 @@ class AuthApiTest extends TestCase
      */
     public function test_counselor_can_register_with_role_and_speciality(): void
     {
+        $email = 'paul.'.uniqid().'@example.com';
+        $telephone = '69'.random_int(1000000, 9999999);
+
         $response = $this->postJson('/api/v1/auth/register', [
             'role' => 'conseiller',
             'prenom' => 'Paul',
             'nom' => 'Mvondo',
-            'email' => 'paul.mvondo@example.com',
-            'telephone' => '691111111',
+            'email' => $email,
+            'telephone' => $telephone,
             'specialite' => 'Orientation scolaire et professionnelle',
             'password' => 'secret123',
             'password_confirmation' => 'secret123',
@@ -96,7 +188,7 @@ class AuthApiTest extends TestCase
             ->assertCreated()
             ->assertJsonPath('user.role', 'conseiller');
 
-        $user = User::query()->where('email', 'paul.mvondo@example.com')->firstOrFail();
+        $user = User::query()->where('email', $email)->firstOrFail();
 
         $this->assertDatabaseHas('profils_conseillers', [
             'user_id' => $user->id,

@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: configure l'authentification, les guards et fournisseurs utilisateurs.
+
 use App\Models\User;
 
 return [

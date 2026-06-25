@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: configure les files d'attente et traitements asynchrones.
+
 return [
 
     /*

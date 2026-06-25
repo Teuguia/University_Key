@@ -1,3 +1,5 @@
+// Commentaire d'intention: affiche les textes legaux dans une fenetre modale.
+
 import { useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../services/apiClient'
 

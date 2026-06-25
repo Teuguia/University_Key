@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: valide les donnees d'inscription selon le role choisi.
+
 namespace App\Http\Requests\Api\V1\Auth;
 
 use Illuminate\Foundation\Http\FormRequest;

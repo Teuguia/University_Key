@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: configure les mecanismes de cache utilises par Laravel.
+
 use Illuminate\Support\Str;
 
 return [

@@ -1,3 +1,5 @@
+// Commentaire d'intention: compose le tableau de bord etudiant et la fenetre dediee aux tests.
+
 import { useEffect, useMemo, useState } from 'react'
 import { apiRequest } from '../../services/apiClient'
 
@@ -5,6 +7,7 @@ const heroImage = '/images/hero-student.png'
 
 // Les libelles de navigation viennent du dictionnaire; cette liste conserve seulement les icones.
 const navIcons = ['home', 'user', 'clipboard', 'chart', 'graduation', 'school', 'users', 'message', 'bell', 'settings']
+const navViewIds = ['overview', 'profile', 'tests', 'results', 'programs', 'schools', 'counselors', 'messages', 'alerts', 'settings']
 
 function DashboardIcon({ name, className = 'h-5 w-5' }) {
   const common = {
@@ -183,6 +186,7 @@ export function StudentDashboardPage({ labels }) {
   const [searchResults, setSearchResults] = useState([])
   const [searchStatus, setSearchStatus] = useState('idle')
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [activeDashboardView, setActiveDashboardView] = useState('overview')
 
   useEffect(() => {
     let isMounted = true
@@ -256,6 +260,10 @@ export function StudentDashboardPage({ labels }) {
 
   const student = dashboard?.student
   const metrics = dashboard?.metrics ?? {}
+  const availableTests = dashboard?.available_tests ?? []
+  const testResults = dashboard?.test_results ?? []
+  const catalogPrograms = dashboard?.catalog_programs ?? []
+  const catalogSchools = dashboard?.catalog_schools ?? []
   const profileCompletion = dashboard?.profile_completion?.percentage ?? 0
   const compatibility = dashboard?.compatibility
   const domains = useMemo(() => {
@@ -263,6 +271,36 @@ export function StudentDashboardPage({ labels }) {
     // Si le catalogue backend est vide, on affiche des domaines localises par defaut.
     return apiDomains.length ? apiDomains : labels.domains
   }, [dashboard?.domains, labels.domains])
+
+  async function refreshDashboard() {
+    try {
+      const payload = await apiRequest('/student/dashboard')
+      setDashboard(payload.data)
+    } catch {
+      // Le dashboard garde les dernieres donnees affichables si le rafraichissement silencieux echoue.
+    }
+  }
+
+  useEffect(() => {
+    const handleFocus = () => {
+      if (status.state === 'ready') {
+        refreshDashboard()
+      }
+    }
+
+    window.addEventListener('focus', handleFocus)
+    return () => window.removeEventListener('focus', handleFocus)
+  }, [status.state])
+
+  function openOrientationTest(testId) {
+    const testUrl = `${window.location.origin}${window.location.pathname}#student-test-${testId}`
+    window.open(testUrl, `student-test-${testId}`, 'width=1040,height=820')
+  }
+
+  function openDashboardView(viewId) {
+    setActiveDashboardView(viewId)
+    window.setTimeout(() => document.getElementById('student-active-view')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0)
+  }
 
   async function handlePhotoChange(event) {
     const [photo] = event.target.files ?? []
@@ -338,17 +376,18 @@ export function StudentDashboardPage({ labels }) {
 
   return (
     <section className="min-h-screen bg-slate-50">
-      <div className="mx-auto grid max-w-[96rem] gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[16rem_1fr_22rem] lg:px-8">
+      <div className={`mx-auto grid max-w-[96rem] gap-6 px-4 py-6 sm:px-6 lg:px-8 ${activeDashboardView === 'overview' ? 'lg:grid-cols-[16rem_1fr_22rem]' : 'lg:grid-cols-[16rem_1fr]'}`}>
         {/* Navigation laterale desktop de l'espace etudiant. */}
         <aside className="hidden lg:block">
           <nav className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm shadow-slate-200/60">
             {labels.nav.map((label, index) => (
-              <a
+              <button
                 className={`flex min-h-12 items-center gap-3 rounded-md px-4 text-sm font-black ${
-                  index === 0 ? 'bg-blue-50 text-[#074fb2]' : 'text-[#061d49] hover:bg-slate-50'
+                  activeDashboardView === navViewIds[index] ? 'bg-blue-50 text-[#074fb2]' : 'text-[#061d49] hover:bg-slate-50'
                 }`}
-                href={index === 7 || index === 8 ? '#communications' : '#dashboard'}
                 key={label}
+                onClick={() => openDashboardView(navViewIds[index])}
+                type="button"
               >
                 <DashboardIcon className="h-5 w-5 shrink-0" name={navIcons[index]} />
                 {label}
@@ -357,7 +396,7 @@ export function StudentDashboardPage({ labels }) {
                     {metrics.unread_messages}
                   </span>
                 )}
-              </a>
+              </button>
             ))}
           </nav>
 
@@ -367,13 +406,29 @@ export function StudentDashboardPage({ labels }) {
             </span>
             <h2 className="mt-4 text-base font-black text-[#061d49]">{labels.helpTitle}</h2>
             <p className="mt-2 text-sm leading-6 text-slate-500">{labels.helpText}</p>
-            <a className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#073f8f] px-4 text-sm font-black text-white" href="#conseillers">
+            <button className="mt-5 inline-flex min-h-11 w-full items-center justify-center rounded-md bg-[#073f8f] px-4 text-sm font-black text-white" onClick={() => openDashboardView('counselors')} type="button">
               {labels.contactCounselor}
-            </a>
+            </button>
           </div>
         </aside>
 
-        <main className="min-w-0 space-y-5">
+        <main className="min-w-0 space-y-5" id="student-active-view">
+          <nav className="grid gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-sm shadow-slate-200/60 sm:grid-cols-2 lg:hidden">
+            {labels.nav.map((label, index) => (
+              <button
+                className={`flex min-h-11 items-center gap-2 rounded-md px-3 text-left text-xs font-black ${
+                  activeDashboardView === navViewIds[index] ? 'bg-blue-50 text-[#074fb2]' : 'text-[#061d49] hover:bg-slate-50'
+                }`}
+                key={label}
+                onClick={() => openDashboardView(navViewIds[index])}
+                type="button"
+              >
+                <DashboardIcon className="h-4 w-4 shrink-0" name={navIcons[index]} />
+                {label}
+              </button>
+            ))}
+          </nav>
+
           <section className="relative rounded-lg border border-slate-200 bg-white p-4 shadow-sm shadow-slate-200/60">
             <div className="flex min-h-12 items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-4 text-slate-400">
               <DashboardIcon className="h-5 w-5 shrink-0" name="search" />
@@ -429,7 +484,106 @@ export function StudentDashboardPage({ labels }) {
             )}
           </section>
 
-          <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-200/60">
+          <section className={`${activeDashboardView === 'profile' || activeDashboardView === 'settings' ? '' : 'hidden'} rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60`}>
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                {student?.photo_url ? (
+                  <img alt="" className="h-16 w-16 rounded-full object-cover" src={student.photo_url} />
+                ) : (
+                  <span className="grid h-16 w-16 place-items-center rounded-full bg-[#061d49] text-base font-black text-white">
+                    {initials(student?.name)}
+                  </span>
+                )}
+                <div>
+                  <h2 className="text-xl font-black text-[#061d49]">{student?.name}</h2>
+                  <p className="text-sm font-bold text-slate-500">{student?.email}</p>
+                  <p className="mt-1 text-sm font-bold text-slate-500">{student?.city || student?.region || labels.profileStudent}</p>
+                </div>
+              </div>
+              <label className="inline-flex min-h-10 cursor-pointer items-center justify-center rounded-md border border-slate-200 bg-white px-4 text-sm font-black text-[#074fb2] hover:bg-blue-50">
+                {photoStatus.state === 'loading' ? labels.uploadLoading : labels.uploadButton}
+                <input accept="image/*" className="sr-only" onChange={handlePhotoChange} type="file" />
+              </label>
+            </div>
+            {photoStatus.message && (
+              <p className={`mt-4 rounded-md px-4 py-3 text-sm font-bold ${photoStatus.state === 'error' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`}>
+                {photoStatus.message}
+              </p>
+            )}
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-md bg-slate-50 px-4 py-3">
+                <p className="text-xs font-black text-slate-500">{labels.profileComplete}</p>
+                <p className="mt-1 text-2xl font-black text-[#061d49]">{profileCompletion}%</p>
+              </div>
+              <div className="rounded-md bg-slate-50 px-4 py-3">
+                <p className="text-xs font-black text-slate-500">{labels.compatibility}</p>
+                <p className="mt-1 text-2xl font-black text-[#061d49]">{metrics.max_compatibility ?? 0}%</p>
+              </div>
+              <div className="rounded-md bg-slate-50 px-4 py-3">
+                <p className="text-xs font-black text-slate-500">{labels.testsDone}</p>
+                <p className="mt-1 text-2xl font-black text-[#061d49]">{metrics.tests_completed ?? 0}</p>
+              </div>
+            </div>
+          </section>
+
+          <section className={`${activeDashboardView === 'counselors' ? '' : 'hidden'} rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60`}>
+            <span className="grid h-12 w-12 place-items-center rounded-md bg-blue-50 text-[#074fb2]">
+              <DashboardIcon className="h-6 w-6" name="users" />
+            </span>
+            <h2 className="mt-4 text-lg font-black text-[#061d49]">{labels.helpTitle}</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{labels.helpText}</p>
+            <a className="mt-5 inline-flex min-h-11 items-center justify-center rounded-md bg-[#073f8f] px-5 text-sm font-black text-white" href="#communications">
+              {labels.contactCounselor}
+            </a>
+          </section>
+
+          <section className={`${activeDashboardView === 'messages' ? '' : 'hidden'} rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60`}>
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg font-black text-[#061d49]">{labels.recentMessages}</h2>
+              <a className="text-sm font-black text-[#074fb2]" href="#communications">{labels.viewAll}</a>
+            </div>
+            <div className="mt-5 space-y-4">
+              {dashboard.recent_messages.length === 0 ? (
+                <EmptyState>{labels.noMessages}</EmptyState>
+              ) : (
+                dashboard.recent_messages.map((message) => (
+                  <article className="flex gap-3 rounded-md border border-slate-100 p-3" key={message.id}>
+                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-blue-50 text-xs font-black text-[#074fb2]">
+                      {initials(message.sender)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <h3 className="truncate text-sm font-black text-[#061d49]">{message.sender}</h3>
+                      <p className="truncate text-xs font-bold text-slate-500">{message.excerpt}</p>
+                    </div>
+                    {message.is_unread && <span className="mt-2 h-2 w-2 rounded-full bg-[#074fb2]" />}
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className={`${activeDashboardView === 'alerts' ? '' : 'hidden'} rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60`}>
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg font-black text-[#061d49]">{labels.reminders}</h2>
+            </div>
+            <div className="mt-5 space-y-3">
+              {dashboard.reminders.length === 0 ? (
+                <EmptyState>{labels.noReminders}</EmptyState>
+              ) : (
+                dashboard.reminders.map((reminder) => (
+                  <article className="flex min-h-16 items-center gap-3 rounded-md border border-slate-100 px-4 py-3" key={reminder.id}>
+                    <DashboardIcon className="h-5 w-5 shrink-0 text-[#074fb2]" name={reminder.type === 'bourse' ? 'briefcase' : 'calendar'} />
+                    <div className="min-w-0">
+                      <h3 className="truncate text-sm font-black text-[#061d49]">{reminder.title}</h3>
+                      <p className="truncate text-xs font-bold text-slate-500">{reminder.content}</p>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className={`${activeDashboardView === 'overview' ? '' : 'hidden'} overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-200/60`}>
             <div className="grid min-h-64 gap-6 px-6 py-7 lg:grid-cols-[1fr_26rem] lg:px-8">
               <div className="self-center">
                 <p className="text-sm font-black text-[#074fb2]">{labels.profileComplete} {profileCompletion}%</p>
@@ -444,10 +598,10 @@ export function StudentDashboardPage({ labels }) {
                     {labels.compatibilityHint}
                   </p>
                 )}
-                <a className="mt-7 inline-flex min-h-12 items-center gap-3 rounded-md bg-[#073f8f] px-6 text-sm font-black text-white shadow-lg shadow-blue-900/20 hover:bg-[#052f6f]" href="#tests">
+                <button className="mt-7 inline-flex min-h-12 items-center gap-3 rounded-md bg-[#073f8f] px-6 text-sm font-black text-white shadow-lg shadow-blue-900/20 hover:bg-[#052f6f]" onClick={() => openDashboardView('tests')} type="button">
                   {labels.takeTest}
                   <span aria-hidden="true">-&gt;</span>
-                </a>
+                </button>
               </div>
               <div className="relative hidden min-h-56 items-end justify-center lg:flex">
                 <div className="absolute inset-x-6 bottom-0 h-36 rounded-full bg-blue-50" />
@@ -460,18 +614,108 @@ export function StudentDashboardPage({ labels }) {
             </div>
           </section>
 
-          <section className="grid overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-200/60 sm:grid-cols-2 xl:grid-cols-4">
+          <section className={`${activeDashboardView === 'overview' ? 'grid' : 'hidden'} overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm shadow-slate-200/60 sm:grid-cols-2 xl:grid-cols-4`}>
             <MetricCard action={labels.history} icon="clipboard" label={labels.testsDone} tone="bg-blue-50 text-[#074fb2]" value={metrics.tests_completed ?? 0} />
             <MetricCard action={labels.results} icon="star" label={labels.compatibility} tone="bg-emerald-50 text-emerald-700" value={`${metrics.max_compatibility ?? 0}%`} />
             <MetricCard action={labels.favorites} icon="school" label={labels.favoriteSchools} tone="bg-violet-50 text-violet-700" value={metrics.favorite_schools ?? 0} />
             <MetricCard action={labels.openMessages} icon="users" label={labels.counselorsTalking} tone="bg-orange-50 text-orange-700" value={metrics.open_conversations ?? 0} />
           </section>
 
-          <div className="grid gap-5 xl:grid-cols-2">
+          <section className={`${activeDashboardView === 'tests' ? '' : 'hidden'} rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60`} id="tests">
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <h2 className="text-lg font-black text-[#061d49]">{labels.availableTestsTitle}</h2>
+                <p className="mt-1 text-sm font-bold text-slate-500">{labels.availableTestsText}</p>
+              </div>
+              <span className="rounded-md bg-blue-50 px-3 py-2 text-xs font-black text-[#074fb2]">
+                {availableTests.length} {labels.testsAvailable}
+              </span>
+            </div>
+
+            <div className="mt-5 grid gap-4 lg:grid-cols-2">
+              {availableTests.length === 0 ? (
+                <EmptyState>{labels.noAvailableTests}</EmptyState>
+              ) : (
+                availableTests.map((test) => (
+                  <article className="rounded-md border border-slate-200 p-4" key={test.id}>
+                    <div className="flex items-start gap-3">
+                      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-blue-50 text-[#074fb2]">
+                        <DashboardIcon name="clipboard" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-sm font-black text-[#061d49]">{test.title}</h3>
+                          {test.completed && (
+                            <span className="rounded-md bg-emerald-50 px-2 py-1 text-[0.7rem] font-black text-emerald-700">
+                              {labels.completed}
+                            </span>
+                          )}
+                        </div>
+                        <p className="mt-2 line-clamp-2 text-sm leading-6 text-slate-500">{test.description || labels.noDescription}</p>
+                        <div className="mt-3 flex flex-wrap gap-2 text-xs font-black text-slate-500">
+                          <span>{test.questions_count} {labels.questions}</span>
+                          <span>{test.duration_minutes} min</span>
+                          {test.last_session?.score !== null && test.last_session?.score !== undefined && (
+                            <span>{labels.lastScore} {test.last_session.score}%</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      className="mt-4 inline-flex min-h-10 items-center justify-center rounded-md bg-[#073f8f] px-4 text-sm font-black text-white disabled:opacity-60"
+                      onClick={() => openOrientationTest(test.id)}
+                      type="button"
+                    >
+                      {test.completed ? labels.retakeTest : labels.startTest}
+                    </button>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className={`${activeDashboardView === 'results' ? '' : 'hidden'} rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60`} id="resultats">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg font-black text-[#061d49]">{labels.myResults}</h2>
+              <button className="text-sm font-black text-[#074fb2]" onClick={() => openDashboardView('tests')} type="button">{labels.takeAnotherTest}</button>
+            </div>
+            <div className="mt-5 space-y-4">
+              {testResults.length === 0 ? (
+                <EmptyState>{labels.noResults}</EmptyState>
+              ) : (
+                testResults.map((result) => (
+                  <article className="rounded-md border border-slate-200 p-4" key={result.id}>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-sm font-black text-[#061d49]">{result.title}</h3>
+                        <p className="mt-1 text-xs font-bold text-slate-500">{formatDate(result.completed_at, labels.noDate)}</p>
+                      </div>
+                      <span className="text-xl font-black text-[#061d49]">{result.score ?? 0}%</span>
+                    </div>
+                    {result.recommendations.length > 0 && (
+                      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+                        {result.recommendations.map((recommendation) => (
+                          <div className="rounded-md bg-slate-50 px-3 py-2" key={recommendation.id}>
+                            <div className="flex justify-between gap-3 text-sm font-black text-[#061d49]">
+                              <span>{recommendation.name}</span>
+                              <span>{recommendation.score}%</span>
+                            </div>
+                            <p className="mt-1 text-xs font-bold text-slate-500">{recommendation.domain} - {recommendation.level}</p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+
+          <div className={`${activeDashboardView === 'overview' ? 'grid' : 'hidden'} gap-5 xl:grid-cols-2`}>
             <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
               <div className="flex items-center justify-between gap-4">
                 <h2 className="text-lg font-black text-[#061d49]">{labels.recentTests}</h2>
-                <a className="text-sm font-black text-[#074fb2]" href="#tests">{labels.viewAll}</a>
+                <button className="text-sm font-black text-[#074fb2]" onClick={() => openDashboardView('tests')} type="button">{labels.viewAll}</button>
               </div>
               <div className="mt-5 space-y-3">
                 {dashboard.recent_tests.length === 0 ? (
@@ -496,7 +740,7 @@ export function StudentDashboardPage({ labels }) {
             <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
               <div className="flex items-center justify-between gap-4">
                 <h2 className="text-lg font-black text-[#061d49]">{labels.recommendedPrograms}</h2>
-                <a className="text-sm font-black text-[#074fb2]" href="#filieres">{labels.viewAll}</a>
+                <button className="text-sm font-black text-[#074fb2]" onClick={() => openDashboardView('programs')} type="button">{labels.viewAll}</button>
               </div>
               <div className="mt-5 space-y-4">
                 {dashboard.recommended_programs.length === 0 ? (
@@ -518,22 +762,83 @@ export function StudentDashboardPage({ labels }) {
             </section>
           </div>
 
-          <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
+          <section className={`${activeDashboardView === 'overview' ? '' : 'hidden'} rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60`}>
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-black text-[#061d49]">{labels.domainsTitle}</h2>
-              <a className="text-sm font-black text-[#074fb2]" href="#filieres">{labels.seeMore}</a>
+              <button className="text-sm font-black text-[#074fb2]" onClick={() => openDashboardView('programs')} type="button">{labels.seeMore}</button>
             </div>
             <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
               {domains.map((domain, index) => (
-                <a className="flex min-h-20 flex-col items-center justify-center rounded-md border border-slate-200 bg-white text-center text-sm font-black text-[#061d49] hover:border-[#074fb2] hover:bg-blue-50" href="#filieres" key={`${domain.slug}-${index}`}>
+                <button className="flex min-h-20 flex-col items-center justify-center rounded-md border border-slate-200 bg-white text-center text-sm font-black text-[#061d49] hover:border-[#074fb2] hover:bg-blue-50" key={`${domain.slug}-${index}`} onClick={() => openDashboardView('programs')} type="button">
                   <DashboardIcon className="mb-2 h-6 w-6 text-[#074fb2]" name={['heart', 'code', 'briefcase', 'school', 'settings', 'grid'][index] ?? 'grid'} />
                   {domain.name}
-                </a>
+                </button>
               ))}
+            </div>
+          </section>
+
+          <section className={`${activeDashboardView === 'programs' ? '' : 'hidden'} rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60`} id="filieres">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg font-black text-[#061d49]">{labels.programCatalog}</h2>
+              <span className="text-sm font-black text-[#074fb2]">{catalogPrograms.length}</span>
+            </div>
+            <div className="mt-5 grid gap-3 lg:grid-cols-2">
+              {catalogPrograms.length === 0 ? (
+                <EmptyState>{labels.noCatalogPrograms}</EmptyState>
+              ) : (
+                catalogPrograms.map((program) => (
+                  <article className="rounded-md border border-slate-200 p-4" key={program.id}>
+                    <div className="flex items-start gap-3">
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-md bg-emerald-50 text-emerald-700">
+                        <DashboardIcon name="graduation" />
+                      </span>
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-black text-[#061d49]">{program.name}</h3>
+                        <p className="mt-1 text-xs font-bold text-slate-500">{program.domain} - {program.level} - {program.duration_years} an(s)</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-500">{program.description || program.diploma}</p>
+                        <p className="mt-2 text-xs font-black text-[#074fb2]">{program.schools_count} {labels.schoolsOffering}</p>
+                      </div>
+                    </div>
+                  </article>
+                ))
+              )}
+            </div>
+          </section>
+
+          <section className={`${activeDashboardView === 'schools' ? '' : 'hidden'} rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60`} id="ecoles">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="text-lg font-black text-[#061d49]">{labels.schoolCatalog}</h2>
+              <span className="text-sm font-black text-[#074fb2]">{catalogSchools.length}</span>
+            </div>
+            <div className="mt-5 grid gap-3 lg:grid-cols-2">
+              {catalogSchools.length === 0 ? (
+                <EmptyState>{labels.noCatalogSchools}</EmptyState>
+              ) : (
+                catalogSchools.map((school) => (
+                  <a className="rounded-md border border-slate-200 p-4 hover:border-[#074fb2] hover:bg-blue-50" href={school.url} key={school.id}>
+                    <div className="flex items-start gap-3">
+                      {school.logo_url ? (
+                        <img alt="" className="h-11 w-11 shrink-0 rounded-md object-cover" src={school.logo_url} />
+                      ) : (
+                        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-md bg-blue-50 text-[#074fb2]">
+                          <DashboardIcon name="school" />
+                        </span>
+                      )}
+                      <div className="min-w-0">
+                        <h3 className="text-sm font-black text-[#061d49]">{school.name}</h3>
+                        <p className="mt-1 text-xs font-bold text-slate-500">{school.city} - {school.region}</p>
+                        <p className="mt-2 text-sm leading-6 text-slate-500">{school.description || labels.noDescription}</p>
+                        <p className="mt-2 text-xs font-black text-[#074fb2]">{school.programs_count} {labels.programsAvailable}</p>
+                      </div>
+                    </div>
+                  </a>
+                ))
+              )}
             </div>
           </section>
         </main>
 
+        {activeDashboardView === 'overview' && (
         <aside className="space-y-5">
           <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
             <div className="flex items-center gap-3">
@@ -563,7 +868,7 @@ export function StudentDashboardPage({ labels }) {
           <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-black text-[#061d49]">{labels.recentMessages}</h2>
-              <a className="text-sm font-black text-[#074fb2]" href="#messages">{labels.viewAll}</a>
+              <button className="text-sm font-black text-[#074fb2]" onClick={() => openDashboardView('messages')} type="button">{labels.viewAll}</button>
             </div>
             <div className="mt-5 space-y-4">
               {dashboard.recent_messages.length === 0 ? (
@@ -588,7 +893,7 @@ export function StudentDashboardPage({ labels }) {
           <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-black text-[#061d49]">{labels.reminders}</h2>
-              <a className="text-sm font-black text-[#074fb2]" href="#alertes">{labels.viewAll}</a>
+              <button className="text-sm font-black text-[#074fb2]" onClick={() => openDashboardView('alerts')} type="button">{labels.viewAll}</button>
             </div>
             <div className="mt-5 space-y-3">
               {dashboard.reminders.length === 0 ? (
@@ -610,7 +915,7 @@ export function StudentDashboardPage({ labels }) {
           <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60">
             <div className="flex items-center justify-between gap-4">
               <h2 className="text-lg font-black text-[#061d49]">{labels.recommendedSchools}</h2>
-              <a className="text-sm font-black text-[#074fb2]" href="#ecoles">{labels.viewAll}</a>
+              <button className="text-sm font-black text-[#074fb2]" onClick={() => openDashboardView('schools')} type="button">{labels.viewAll}</button>
             </div>
             <div className="mt-5 space-y-4">
               {dashboard.recommended_schools.length === 0 ? (
@@ -636,7 +941,242 @@ export function StudentDashboardPage({ labels }) {
             </div>
           </section>
         </aside>
+        )}
       </div>
+    </section>
+  )
+}
+
+/**
+ * Fenetre dediee au passage d'un test d'orientation.
+ */
+export function StudentTestWindowPage({ labels, testId }) {
+  const [test, setTest] = useState(null)
+  const [answers, setAnswers] = useState({})
+  const [status, setStatus] = useState({ state: 'loading', message: '' })
+  const [result, setResult] = useState(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    async function loadTest() {
+      if (!testId) {
+        setStatus({ state: 'error', message: 'Test introuvable.' })
+        return
+      }
+
+      try {
+        const payload = await apiRequest(`/student/orientation-tests/${testId}`)
+
+        if (isMounted) {
+          setTest(payload.data)
+          setStatus({ state: 'ready', message: '' })
+        }
+      } catch (error) {
+        if (isMounted) {
+          setStatus({ state: 'error', message: error.message })
+        }
+      }
+    }
+
+    loadTest()
+
+    return () => {
+      isMounted = false
+    }
+  }, [testId])
+
+  function updateAnswer(question, choiceId, checked = true) {
+    setAnswers((current) => {
+      if (question.type !== 'choix_multiple') {
+        return { ...current, [question.id]: [choiceId] }
+      }
+
+      const previous = current[question.id] ?? []
+      const next = checked
+        ? [...new Set([...previous, choiceId])]
+        : previous.filter((id) => id !== choiceId)
+
+      return { ...current, [question.id]: next }
+    })
+  }
+
+  async function submitTest(event) {
+    event.preventDefault()
+
+    if (!test) {
+      return
+    }
+
+    const unansweredQuestion = test.questions.find((question) => (answers[question.id] ?? []).length === 0)
+
+    if (unansweredQuestion) {
+      setStatus({ state: 'error', message: labels.answerAllQuestions })
+      return
+    }
+
+    const payloadAnswers = test.questions
+      .map((question) => ({
+        question_id: question.id,
+        choice_ids: answers[question.id] ?? [],
+      }))
+      .filter((answer) => answer.choice_ids.length > 0)
+
+    setStatus({ state: 'loading', message: '' })
+
+    try {
+      const payload = await apiRequest(`/student/orientation-tests/${test.id}/submit`, {
+        method: 'POST',
+        body: JSON.stringify({ answers: payloadAnswers }),
+      })
+      setResult(payload.data)
+      setStatus({ state: 'success', message: payload.message })
+    } catch (error) {
+      setStatus({ state: 'error', message: error.message })
+    }
+  }
+
+  const totalQuestions = test?.questions?.length ?? 0
+  const answeredQuestions = (test?.questions ?? []).filter((question) => (answers[question.id] ?? []).length > 0).length
+  const isComplete = totalQuestions > 0 && answeredQuestions === totalQuestions
+
+  function leaveTestWindow() {
+    if (window.opener && !window.opener.closed) {
+      window.opener.location.hash = '#dashboard'
+      window.opener.focus()
+      window.close()
+      return
+    }
+
+    window.location.hash = 'dashboard'
+  }
+
+  if (status.state === 'loading' && !test) {
+    return (
+      <section className="min-h-screen bg-slate-50 px-4 py-10 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-4xl rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="h-8 w-72 animate-pulse rounded-md bg-slate-200" />
+          <div className="mt-6 space-y-4">
+            {[1, 2, 3].map((item) => (
+              <div className="h-28 animate-pulse rounded-md bg-slate-100" key={item} />
+            ))}
+          </div>
+        </div>
+      </section>
+    )
+  }
+
+  if (status.state === 'error' && !test) {
+    return (
+      <section className="min-h-screen bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-xl rounded-lg border border-red-100 bg-white p-8 text-center shadow-sm">
+          <h1 className="text-2xl font-black text-[#061d49]">{labels.unavailableTitle}</h1>
+          <p className="mt-3 text-sm font-bold text-red-600">{status.message}</p>
+          <button className="mt-6 inline-flex min-h-11 items-center rounded-md bg-[#073f8f] px-5 text-sm font-black text-white" onClick={leaveTestWindow} type="button">
+            {labels.nav?.[0] ?? 'Dashboard'}
+          </button>
+        </div>
+      </section>
+    )
+  }
+
+  return (
+    <section className="min-h-screen bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+      <form className="mx-auto max-w-4xl rounded-lg border border-slate-200 bg-white p-5 shadow-sm shadow-slate-200/60" onSubmit={submitTest}>
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-100 pb-5">
+          <div>
+            <p className="text-sm font-black text-[#074fb2]">{labels.orientationTest}</p>
+            <h1 className="mt-2 text-2xl font-black text-[#061d49]">{test?.title}</h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500">{test?.description || labels.noDescription}</p>
+            <p className="mt-3 text-xs font-black text-slate-500">
+              {totalQuestions} {labels.questions} - {test?.duration_minutes ?? 0} min
+            </p>
+          </div>
+          <button className="inline-flex min-h-10 items-center rounded-md border border-slate-200 px-4 text-sm font-black text-[#061d49] hover:bg-slate-50" onClick={leaveTestWindow} type="button">
+            {labels.nav?.[0] ?? 'Dashboard'}
+          </button>
+        </div>
+
+        {status.message && (
+          <p className={`mt-5 rounded-md px-4 py-3 text-sm font-bold ${status.state === 'error' ? 'bg-red-50 text-red-700' : status.state === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-50 text-slate-600'}`}>
+            {status.message}
+          </p>
+        )}
+
+        {result ? (
+          <section className="mt-6 rounded-md border border-emerald-100 bg-emerald-50 p-5">
+            <h2 className="text-lg font-black text-[#061d49]">{labels.myResults}</h2>
+            <p className="mt-2 text-4xl font-black text-emerald-700">{result.score ?? 0}%</p>
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+              {(result.recommendations ?? []).map((recommendation) => (
+                <article className="rounded-md bg-white px-4 py-3" key={recommendation.id}>
+                  <div className="flex justify-between gap-3 text-sm font-black text-[#061d49]">
+                    <span>{recommendation.name}</span>
+                    <span>{recommendation.score}%</span>
+                  </div>
+                  <p className="mt-1 text-xs font-bold text-slate-500">{recommendation.domain} - {recommendation.level}</p>
+                </article>
+              ))}
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <button className="inline-flex min-h-11 items-center rounded-md bg-[#073f8f] px-5 text-sm font-black text-white" onClick={leaveTestWindow} type="button">
+                {labels.results}
+              </button>
+              <button className="min-h-11 rounded-md border border-slate-200 bg-white px-5 text-sm font-black text-[#061d49]" onClick={leaveTestWindow} type="button">
+                {labels.closeTest}
+              </button>
+            </div>
+          </section>
+        ) : (
+          <>
+            <div className="mt-6 space-y-4">
+              <div className="rounded-md bg-blue-50 px-4 py-3 text-sm font-black text-[#073f8f]">
+                {labels.answeredProgress} {answeredQuestions}/{totalQuestions}
+              </div>
+              {(test?.questions ?? []).map((question, index) => (
+                <fieldset className="rounded-md border border-slate-200 bg-white p-4" key={question.id}>
+                  <legend className="px-1 text-sm font-black text-[#061d49]">
+                    {index + 1}. {question.label}
+                  </legend>
+                  <div className="mt-3 grid gap-2">
+                    {question.choices.map((choice) => {
+                      const checked = (answers[question.id] ?? []).includes(choice.id)
+                      const inputType = question.type === 'choix_multiple' ? 'checkbox' : 'radio'
+
+                      return (
+                        <label className={`flex min-h-11 cursor-pointer items-center gap-3 rounded-md border px-3 text-sm font-bold ${checked ? 'border-[#074fb2] bg-blue-50 text-[#061d49]' : 'border-slate-200 bg-white text-slate-600'}`} key={choice.id}>
+                          <input
+                            checked={checked}
+                            className="h-4 w-4 accent-[#074fb2]"
+                            name={`question-${question.id}`}
+                            onChange={(event) => updateAnswer(question, choice.id, event.target.checked)}
+                            type={inputType}
+                          />
+                          {choice.label}
+                        </label>
+                      )
+                    })}
+                  </div>
+                </fieldset>
+              ))}
+            </div>
+
+            <div className="mt-6 flex flex-wrap gap-3">
+              {!isComplete && (
+                <p className="w-full rounded-md bg-orange-50 px-4 py-3 text-sm font-bold text-orange-700">
+                  {labels.answerAllQuestions}
+                </p>
+              )}
+              <button className="min-h-11 rounded-md bg-[#073f8f] px-5 text-sm font-black text-white disabled:opacity-60" disabled={status.state === 'loading' || !isComplete} type="submit">
+                {status.state === 'loading' ? labels.submitLoading : labels.submitTest}
+              </button>
+              <button className="inline-flex min-h-11 items-center rounded-md border border-slate-200 px-5 text-sm font-black text-[#061d49]" onClick={leaveTestWindow} type="button">
+                {labels.closeTest}
+              </button>
+            </div>
+          </>
+        )}
+      </form>
     </section>
   )
 }

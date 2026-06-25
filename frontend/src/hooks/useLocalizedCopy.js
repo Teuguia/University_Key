@@ -1,4 +1,6 @@
 import { useMemo } from 'react'
+// Commentaire d'intention: fournit le dictionnaire localise selon la langue active.
+
 import { copy } from '../i18n/copy'
 
 /**
@@ -7,4 +9,3 @@ import { copy } from '../i18n/copy'
 export function useLocalizedCopy(language) {
   return useMemo(() => copy[language], [language])
 }
-

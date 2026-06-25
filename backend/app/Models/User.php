@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: modele central des comptes et point d'entree des relations utilisateur.
+
 namespace App\Models;
 
 use Database\Factories\UserFactory;
@@ -21,6 +23,8 @@ use Laravel\Sanctum\HasApiTokens;
     'telephone',
     'langue_preferee',
     'derniere_connexion',
+    'telephone_verified_at',
+    'verification_requise',
 ])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -117,6 +121,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'telephone_verified_at' => 'datetime',
+            'verification_requise' => 'boolean',
             'password' => 'hashed',
             'derniere_connexion' => 'datetime',
         ];

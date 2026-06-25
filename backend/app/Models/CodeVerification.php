@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: represente les codes temporaires utilises pour verifier un compte.
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;

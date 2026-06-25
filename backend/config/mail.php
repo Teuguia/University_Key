@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: configure le transport des emails sortants.
+
 return [
 
     /*

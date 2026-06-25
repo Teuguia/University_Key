@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: suit la validation administrative des comptes conseillers.
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;

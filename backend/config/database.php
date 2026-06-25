@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: configure les connexions et options de base de donnees.
+
 use Illuminate\Support\Str;
 use Pdo\Mysql;
 

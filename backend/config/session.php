@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: configure les sessions HTTP de l'application.
+
 use Illuminate\Support\Str;
 
 return [

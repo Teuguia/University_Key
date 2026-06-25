@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: declare les routes web Laravel hors API versionnee.
+
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {

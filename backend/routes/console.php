@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: declare les commandes console simples disponibles dans Laravel.
+
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;

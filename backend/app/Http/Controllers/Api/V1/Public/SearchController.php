@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: fournit la recherche publique d'ecoles et de filieres.
+
 namespace App\Http\Controllers\Api\V1\Public;
 
 use App\Http\Controllers\Controller;

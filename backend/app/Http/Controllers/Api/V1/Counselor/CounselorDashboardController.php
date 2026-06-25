@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: regroupe les donnees affichees dans le tableau de bord conseiller.
+
 namespace App\Http\Controllers\Api\V1\Counselor;
 
 use App\Http\Controllers\Controller;

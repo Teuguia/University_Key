@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: configure Sanctum pour les jetons API et sessions SPA.
+
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
 use Laravel\Sanctum\Http\Middleware\AuthenticateSession;

@@ -1,3 +1,5 @@
+// Commentaire d'intention: fournit des donnees locales de repli pour les sections publiques.
+
 export const programs = [
   { name: 'Genie logiciel', domain: 'Informatique', level: 'Licence', score: '94%' },
   { name: 'Sciences infirmieres', domain: 'Sante', level: 'HND', score: '88%' },
@@ -16,4 +18,3 @@ export const counselors = [
 ]
 
 export const adminModules = ['Utilisateurs', 'Conseillers', 'Ecoles', 'Filieres', 'Tests', 'Logs']
-

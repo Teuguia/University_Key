@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: expose les conversations, messages, notifications et appels entre utilisateurs.
+
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;

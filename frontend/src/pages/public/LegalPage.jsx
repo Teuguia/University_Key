@@ -1,3 +1,5 @@
+// Commentaire d'intention: affiche les contenus legaux publics.
+
 /**
  * Affiche la base des pages legales: conditions, confidentialite et mentions.
  */
@@ -15,4 +17,3 @@ export function LegalPage() {
     </section>
   )
 }
-

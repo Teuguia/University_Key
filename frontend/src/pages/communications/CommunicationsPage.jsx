@@ -1,3 +1,5 @@
+// Commentaire d'intention: fournit l'interface de messagerie et d'appels entre utilisateurs.
+
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { apiRequest } from '../../services/apiClient'
 

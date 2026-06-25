@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: permet a l'admin de lire et publier les textes legaux de la plateforme.
+
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;

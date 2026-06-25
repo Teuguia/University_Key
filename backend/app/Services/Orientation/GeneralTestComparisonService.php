@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: compare les deux tests generaux pour detecter les ecarts d'orientation.
+
 namespace App\Services\Orientation;
 
 use Illuminate\Support\Facades\DB;

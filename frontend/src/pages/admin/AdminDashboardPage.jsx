@@ -1,3 +1,5 @@
+// Commentaire d'intention: compose le tableau de bord administrateur et ses outils de gestion.
+
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../../services/apiClient'
 

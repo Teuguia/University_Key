@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: centralise les statistiques et actions administrateur hors gestion fine des tests.
+
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;

@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: journalise les actions sensibles de l'administration sans bloquer l'action metier.
+
 namespace App\Services\Admin;
 
 use App\Models\User;

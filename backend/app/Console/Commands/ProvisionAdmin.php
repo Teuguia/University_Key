@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: cree ou met a jour un compte administrateur depuis la ligne de commande.
+
 namespace App\Console\Commands;
 
 use App\Models\User;

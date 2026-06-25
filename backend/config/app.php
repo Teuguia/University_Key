@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: configure les parametres generaux de l'application Laravel.
+
 return [
 
     /*

@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: centralise les identifiants des services tiers.
+
 return [
 
     /*
@@ -33,6 +35,12 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+    ],
+
+    // Passerelle interne ou fournisseur SMS : elle recoit {to, message} en JSON.
+    'sms' => [
+        'webhook_url' => env('SMS_WEBHOOK_URL'),
+        'token' => env('SMS_WEBHOOK_TOKEN'),
     ],
 
 ];

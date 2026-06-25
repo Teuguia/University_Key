@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: porte les informations detaillees du profil conseiller.
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Attributes\Fillable;

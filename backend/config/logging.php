@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: configure les canaux de journalisation de l'application.
+
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;

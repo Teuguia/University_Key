@@ -1,3 +1,5 @@
+// Commentaire d'intention: affiche la fiche publique detaillee d'un etablissement.
+
 import { useEffect, useState } from 'react'
 import { apiRequest } from '../../services/apiClient'
 

@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: expose les textes legaux publics consommes par le frontend.
+
 namespace App\Http\Controllers\Api\V1\Public;
 
 use App\Http\Controllers\Controller;

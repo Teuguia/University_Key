@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: orchestre inscription, connexion, verification et session API des utilisateurs.
+
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
@@ -10,6 +12,7 @@ use App\Models\ProfilConseiller;
 use App\Models\ProfilEtudiant;
 use App\Models\User;
 use App\Models\ValidationConseiller;
+use App\Services\Auth\VerificationCodeDeliveryService;
 use App\Services\Admin\ActivityLogService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -18,9 +21,14 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
+    public function __construct(private readonly VerificationCodeDeliveryService $verificationDelivery)
+    {
+    }
+
     /**
      * Cree un compte etudiant ou conseiller, son profil et ses codes de verification.
      */
@@ -28,15 +36,16 @@ class AuthController extends Controller
     {
         $validated = $request->validated();
 
-        $payload = DB::transaction(function () use ($validated, $request): array {
+        $registration = DB::transaction(function () use ($validated): array {
             $user = User::query()->create([
                 'name' => trim($validated['prenom'].' '.$validated['nom']),
                 'email' => $validated['email'],
                 // Hash explicite pour rendre la securite visible, meme si le cast User le protege aussi.
                 'password' => Hash::make($validated['password']),
                 'role' => $validated['role'],
-                // Les conseillers attendent la validation admin avant d'acceder a leur dashboard.
-                'statut' => $validated['role'] === 'conseiller' ? 'en_attente' : 'actif',
+                // Aucun compte public n'est utilisable avant la double verification.
+                'statut' => 'en_attente',
+                'verification_requise' => true,
                 'telephone' => $validated['telephone'],
                 'langue_preferee' => $validated['langue_preferee'] ?? 'fr',
             ]);
@@ -68,23 +77,172 @@ class AuthController extends Controller
                 ]);
             }
 
-            $this->createVerificationCode($user, 'email', $user->email);
-            $this->createVerificationCode($user, 'telephone', $user->telephone);
+            $codes = [
+                $this->createVerificationCode($user, 'email', $user->email),
+                $this->createVerificationCode($user, 'telephone', $user->telephone),
+            ];
 
-            return $this->tokenPayload($user, $request->input('device_name'), $request);
+            // En cas d'echec de distribution, la transaction annule aussi le compte.
+            foreach ($codes as $code) {
+                $this->verificationDelivery->send($code['type'], $code['target'], $code['plain_code']);
+            }
+
+            return ['user' => $user, 'codes' => $codes];
         });
 
         Log::info('auth.register.success', [
-            'user_id' => $payload['user']['id'],
+            'user_id' => $registration['user']->id,
             'ip' => $request->ip(),
         ]);
 
         return response()->json([
-            'message' => $payload['user']['role'] === 'conseiller'
-                ? 'Compte conseiller cree. Il sera accessible apres validation par un administrateur.'
-                : 'Compte cree avec succes. Verification email et telephone requise.',
-            ...$payload,
+            'message' => 'Compte cree. Verifiez votre e-mail et votre numero de telephone pour l’activer.',
+            'user' => $this->publicUser($registration['user']->loadMissing(['profilEtudiant', 'profilConseiller'])),
+            'verification' => $this->verificationPayload($registration['user']),
         ], 201);
+    }
+
+    /**
+     * Valide un OTP. Seule la seconde verification active un etudiant et
+     * delivre un jeton; le conseiller reste en attente de l'administration.
+     */
+    public function verifyCode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'identifiant' => ['required', 'string', 'max:255'],
+            'type' => ['required', Rule::in(['email', 'telephone'])],
+            'code' => ['required', 'digits:6'],
+            'device_name' => ['nullable', 'string', 'max:80'],
+        ]);
+
+        $result = DB::transaction(function () use ($validated): array {
+            $user = $this->userForVerification($validated['type'], $validated['identifiant']);
+
+            if (! $user || ! $user->verification_requise) {
+                return ['valid' => false];
+            }
+
+            $verification = CodeVerification::query()
+                ->where('user_id', $user->id)
+                ->where('type', $validated['type'])
+                ->where('statut', 'en_attente')
+                ->orderByDesc('id')
+                ->lockForUpdate()
+                ->first();
+
+            if (! $verification || $verification->expire_le->isPast() || $verification->nb_tentatives >= 5) {
+                if ($verification && $verification->statut === 'en_attente') {
+                    $verification->forceFill(['statut' => 'expire'])->save();
+                }
+
+                return ['valid' => false];
+            }
+
+            if (! Hash::check($validated['code'], $verification->code)) {
+                $attempts = $verification->nb_tentatives + 1;
+                $verification->forceFill([
+                    'nb_tentatives' => $attempts,
+                    'statut' => $attempts >= 5 ? 'expire' : 'en_attente',
+                ])->save();
+
+                return ['valid' => false];
+            }
+
+            $verification->forceFill(['statut' => 'utilise'])->save();
+            $verifiedColumn = $validated['type'] === 'email' ? 'email_verified_at' : 'telephone_verified_at';
+            $user->forceFill([$verifiedColumn => now()])->save();
+            $user->refresh();
+
+            if ($user->email_verified_at !== null && $user->telephone_verified_at !== null) {
+                $changes = ['verification_requise' => false];
+
+                if ($user->isEtudiant()) {
+                    $changes['statut'] = 'actif';
+                }
+
+                $user->forceFill($changes)->save();
+            }
+
+            return ['valid' => true, 'user' => $user->fresh()];
+        });
+
+        if (! $result['valid']) {
+            throw ValidationException::withMessages([
+                'code' => ['Code invalide, expire ou nombre maximal de tentatives atteint.'],
+            ]);
+        }
+
+        /** @var User $user */
+        $user = $result['user'];
+        $response = [
+            'message' => $user->statut === 'actif'
+                ? 'Verification terminee. Votre compte est maintenant actif.'
+                : 'Verification terminee. Votre compte conseiller attend la validation administrative.',
+            'user' => $this->publicUser($user->loadMissing(['profilEtudiant', 'profilConseiller'])),
+            'verification' => $this->verificationPayload($user),
+        ];
+
+        if (Gate::forUser($user)->allows('access-active-account')) {
+            $response = [...$response, ...$this->tokenPayload($user, $validated['device_name'] ?? null, $request)];
+        }
+
+        return response()->json($response);
+    }
+
+    /**
+     * Invalide le code precedent et envoie un nouveau code, au plus une fois
+     * par minute pour un meme canal.
+     */
+    public function resendVerificationCode(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'identifiant' => ['required', 'string', 'max:255'],
+            'type' => ['required', Rule::in(['email', 'telephone'])],
+        ]);
+
+        $result = DB::transaction(function () use ($validated): array {
+            $user = $this->userForVerification($validated['type'], $validated['identifiant']);
+
+            // Reponse neutre afin de ne pas divulguer l'existence d'un compte.
+            if (! $user || ! $user->verification_requise) {
+                return ['sent' => true, 'code' => null];
+            }
+
+            $lastCode = CodeVerification::query()
+                ->where('user_id', $user->id)
+                ->where('type', $validated['type'])
+                ->latest('created_at')
+                ->lockForUpdate()
+                ->first();
+
+            if ($lastCode && $lastCode->created_at->greaterThan(now()->subMinute())) {
+                return ['sent' => false, 'retry_after' => max(1, 60 - (int) $lastCode->created_at->diffInSeconds(now()))];
+            }
+
+            CodeVerification::query()
+                ->where('user_id', $user->id)
+                ->where('type', $validated['type'])
+                ->where('statut', 'en_attente')
+                ->update(['statut' => 'expire', 'updated_at' => now()]);
+
+            return ['sent' => true, 'code' => $this->createVerificationCode($user, $validated['type'], $validated['identifiant'])];
+        });
+
+        if (! $result['sent']) {
+            return response()->json([
+                'message' => 'Veuillez attendre avant de demander un nouveau code.',
+                'retry_after' => $result['retry_after'],
+            ], 429);
+        }
+
+        if ($result['code']) {
+            $code = $result['code'];
+            $this->verificationDelivery->send($code['type'], $code['target'], $code['plain_code']);
+        }
+
+        return response()->json([
+            'message' => 'Si un compte en attente correspond a cet identifiant, un code a ete envoye.',
+        ]);
     }
 
     /**
@@ -180,16 +338,36 @@ class AuthController extends Controller
     /**
      * Cree un code OTP a 6 chiffres pour email ou telephone.
      */
-    private function createVerificationCode(User $user, string $type, string $cible): void
+    private function createVerificationCode(User $user, string $type, string $cible): array
     {
+        $plainCode = (string) random_int(100000, 999999);
+
         CodeVerification::query()->create([
             'user_id' => $user->id,
-            'code' => (string) random_int(100000, 999999),
+            'code' => Hash::make($plainCode),
             'type' => $type,
             'cible' => $cible,
             'statut' => 'en_attente',
             'expire_le' => now()->addMinutes(15),
         ]);
+
+        return ['type' => $type, 'target' => $cible, 'plain_code' => $plainCode];
+    }
+
+    private function userForVerification(string $type, string $identifiant): ?User
+    {
+        $column = $type === 'email' ? 'email' : 'telephone';
+
+        return User::query()->where($column, trim($identifiant))->first();
+    }
+
+    private function verificationPayload(User $user): array
+    {
+        return [
+            'email_verified' => $user->email_verified_at !== null,
+            'telephone_verified' => $user->telephone_verified_at !== null,
+            'complete' => ! $user->verification_requise,
+        ];
     }
 
     /**

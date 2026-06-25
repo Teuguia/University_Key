@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: configure les disques de stockage locaux et publics.
+
 return [
 
     /*

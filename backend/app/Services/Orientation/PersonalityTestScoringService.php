@@ -1,5 +1,7 @@
 <?php
 
+// Commentaire d'intention: calcule les compatibilites filieres a partir des reponses de personnalite.
+
 namespace App\Services\Orientation;
 
 use Illuminate\Support\Facades\DB;
