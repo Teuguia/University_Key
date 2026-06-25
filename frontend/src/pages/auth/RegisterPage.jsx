@@ -1,7 +1,7 @@
 // Commentaire d'intention: affiche et traite le formulaire d'inscription.
 
 import { useState } from 'react'
-import { BrandIcon } from '../../components/common/BrandIcon'
+import { SocialAuthRolePicker } from '../../components/auth/SocialAuthRolePicker'
 import { apiRequest } from '../../services/apiClient'
 
 const studentImage = '/images/hero-student.png'
@@ -168,6 +168,26 @@ export function RegisterPage({ labels, onOpenLegal }) {
     }
   }
 
+  function handleSocialProvider(provider, selectedRole) {
+    window.localStorage.setItem('university_key_social_role', selectedRole)
+    setStatus({
+      type: 'info',
+      message: (labels.socialUnavailable ?? 'Inscription sociale a configurer pour le role :role.').replace(':provider', provider).replace(':role', selectedRole === 'conseiller' ? labels.counselor : labels.student),
+    })
+  }
+
+  function statusClass(type) {
+    if (type === 'success') {
+      return 'bg-emerald-50 text-emerald-700'
+    }
+
+    if (type === 'info') {
+      return 'bg-blue-50 text-[#073f8f]'
+    }
+
+    return 'bg-red-50 text-red-700'
+  }
+
   return (
     <section className="bg-gradient-to-br from-white via-white to-blue-50 px-4 py-14 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-[0.85fr_1.15fr]">
@@ -262,7 +282,7 @@ export function RegisterPage({ labels, onOpenLegal }) {
 
             {status.message && (
               // Message API: succes de creation ou erreur de validation formulaire.
-              <p className={`mt-5 rounded-md px-4 py-3 text-sm font-bold ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+              <p className={`mt-5 rounded-md px-4 py-3 text-sm font-bold ${statusClass(status.type)}`}>
                 {status.message}
               </p>
             )}
@@ -277,17 +297,7 @@ export function RegisterPage({ labels, onOpenLegal }) {
               <span className="h-px flex-1 bg-slate-200" />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              {/* Boutons sociaux visuels en attendant le branchement OAuth reel. */}
-              <button className="focus-ring inline-flex min-h-11 items-center justify-center gap-3 rounded-md border border-slate-200 bg-white text-sm font-black text-slate-700 hover:bg-slate-50" type="button">
-                <BrandIcon name="google" />
-                Google
-              </button>
-              <button className="focus-ring inline-flex min-h-11 items-center justify-center gap-3 rounded-md border border-slate-200 bg-white text-sm font-black text-slate-700 hover:bg-slate-50" type="button">
-                <BrandIcon name="facebook" />
-                Facebook
-              </button>
-            </div>
+            <SocialAuthRolePicker labels={labels} onProviderSelect={handleSocialProvider} onRoleChange={setRole} role={role} />
 
             <p className="mt-8 text-center text-sm text-slate-500">
               {labels.hasAccount}{' '}

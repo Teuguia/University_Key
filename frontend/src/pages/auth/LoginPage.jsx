@@ -1,7 +1,7 @@
 // Commentaire d'intention: affiche et traite le formulaire de connexion.
 
 import { useState } from 'react'
-import { BrandIcon } from '../../components/common/BrandIcon'
+import { SocialAuthRolePicker } from '../../components/auth/SocialAuthRolePicker'
 import { apiRequest } from '../../services/apiClient'
 
 // Icones SVG locales pour eviter une dependance supplementaire sur l'ecran d'authentification.
@@ -122,6 +122,7 @@ export function LoginPage({ labels }) {
   // status pilote le message utilisateur; isSubmitting bloque le double envoi du formulaire.
   const [status, setStatus] = useState({ type: '', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [socialRole, setSocialRole] = useState('etudiant')
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -151,6 +152,26 @@ export function LoginPage({ labels }) {
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  function handleSocialProvider(provider, selectedRole) {
+    window.localStorage.setItem('university_key_social_role', selectedRole)
+    setStatus({
+      type: 'info',
+      message: (labels.socialUnavailable ?? 'Connexion sociale a configurer pour le role :role.').replace(':provider', provider).replace(':role', selectedRole === 'conseiller' ? labels.counselor : labels.student),
+    })
+  }
+
+  function statusClass(type) {
+    if (type === 'success') {
+      return 'bg-emerald-50 text-emerald-700'
+    }
+
+    if (type === 'info') {
+      return 'bg-blue-50 text-[#073f8f]'
+    }
+
+    return 'bg-red-50 text-red-700'
   }
 
   return (
@@ -195,7 +216,7 @@ export function LoginPage({ labels }) {
 
             {status.message && (
               // Message de retour API: succes apres connexion ou erreur de validation/authentification.
-              <p className={`mt-5 rounded-md px-4 py-3 text-sm font-bold ${status.type === 'success' ? 'bg-emerald-50 text-emerald-700' : 'bg-red-50 text-red-700'}`}>
+              <p className={`mt-5 rounded-md px-4 py-3 text-sm font-bold ${statusClass(status.type)}`}>
                 {status.message}
               </p>
             )}
@@ -220,17 +241,7 @@ export function LoginPage({ labels }) {
               <span className="h-px flex-1 bg-slate-200" />
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              {/* Boutons sociaux visuels en attendant le branchement OAuth reel. */}
-              <button className="focus-ring inline-flex min-h-11 items-center justify-center gap-3 rounded-md border border-slate-200 bg-white text-sm font-black text-slate-700 hover:bg-slate-50" type="button">
-                <BrandIcon name="google" />
-                Google
-              </button>
-              <button className="focus-ring inline-flex min-h-11 items-center justify-center gap-3 rounded-md border border-slate-200 bg-white text-sm font-black text-slate-700 hover:bg-slate-50" type="button">
-                <BrandIcon name="facebook" />
-                Facebook
-              </button>
-            </div>
+            <SocialAuthRolePicker labels={labels} onProviderSelect={handleSocialProvider} onRoleChange={setSocialRole} role={socialRole} />
 
             <p className="mt-8 text-center text-sm text-slate-500">
               {labels.noAccount}{' '}
