@@ -122,7 +122,6 @@ export function LoginPage({ labels }) {
   // status pilote le message utilisateur; isSubmitting bloque le double envoi du formulaire.
   const [status, setStatus] = useState({ type: '', message: '' })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [socialRole, setSocialRole] = useState('etudiant')
 
   async function handleSubmit(event) {
     event.preventDefault()
@@ -154,21 +153,9 @@ export function LoginPage({ labels }) {
     }
   }
 
-  function handleSocialProvider(provider, selectedRole) {
-    window.localStorage.setItem('university_key_social_role', selectedRole)
-    setStatus({
-      type: 'info',
-      message: (labels.socialUnavailable ?? 'Connexion sociale a configurer pour le role :role.').replace(':provider', provider).replace(':role', selectedRole === 'conseiller' ? labels.counselor : labels.student),
-    })
-  }
-
   function statusClass(type) {
     if (type === 'success') {
       return 'bg-emerald-50 text-emerald-700'
-    }
-
-    if (type === 'info') {
-      return 'bg-blue-50 text-[#073f8f]'
     }
 
     return 'bg-red-50 text-red-700'
@@ -241,7 +228,7 @@ export function LoginPage({ labels }) {
               <span className="h-px flex-1 bg-slate-200" />
             </div>
 
-            <SocialAuthRolePicker labels={labels} onProviderSelect={handleSocialProvider} onRoleChange={setSocialRole} role={socialRole} />
+            <SocialAuthRolePicker labels={labels} />
 
             <p className="mt-8 text-center text-sm text-slate-500">
               {labels.noAccount}{' '}

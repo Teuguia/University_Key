@@ -168,21 +168,9 @@ export function RegisterPage({ labels, onOpenLegal }) {
     }
   }
 
-  function handleSocialProvider(provider, selectedRole) {
-    window.localStorage.setItem('university_key_social_role', selectedRole)
-    setStatus({
-      type: 'info',
-      message: (labels.socialUnavailable ?? 'Inscription sociale a configurer pour le role :role.').replace(':provider', provider).replace(':role', selectedRole === 'conseiller' ? labels.counselor : labels.student),
-    })
-  }
-
   function statusClass(type) {
     if (type === 'success') {
       return 'bg-emerald-50 text-emerald-700'
-    }
-
-    if (type === 'info') {
-      return 'bg-blue-50 text-[#073f8f]'
     }
 
     return 'bg-red-50 text-red-700'
@@ -213,12 +201,11 @@ export function RegisterPage({ labels, onOpenLegal }) {
 
         <div className="mx-auto w-full max-w-xl">
           {/* Formulaire public: seuls les roles etudiant et conseiller sont proposes ici. */}
-          <form className="rounded-lg border border-slate-100 bg-white p-7 shadow-2xl shadow-blue-950/10 sm:p-10" data-table-users="users" data-table-profile="profils_etudiants" onSubmit={handleSubmit}>
+          <form className="rounded-lg border border-slate-100 bg-white p-7 shadow-2xl shadow-blue-950/10 sm:p-10" data-table-users="users" data-table-profile={role === 'conseiller' ? 'profils_conseillers' : 'profils_etudiants'} onSubmit={handleSubmit}>
             <h2 className="text-3xl font-black text-[#061d49]">{labels.registerFormTitle}</h2>
             <p className="mt-3 text-sm text-slate-500">{labels.registerFormText}</p>
 
             <input name="name" readOnly type="hidden" value={fullName} />
-            <input name="statut" readOnly type="hidden" value={role === 'conseiller' ? 'en_attente' : 'actif'} />
             <input name="langue_preferee" readOnly type="hidden" value={language} />
 
             {/* Le choix du role pilote aussi la validation serveur: specialite requise pour conseiller. */}
@@ -297,7 +284,7 @@ export function RegisterPage({ labels, onOpenLegal }) {
               <span className="h-px flex-1 bg-slate-200" />
             </div>
 
-            <SocialAuthRolePicker labels={labels} onProviderSelect={handleSocialProvider} onRoleChange={setRole} role={role} />
+            <SocialAuthRolePicker labels={labels} />
 
             <p className="mt-8 text-center text-sm text-slate-500">
               {labels.hasAccount}{' '}
