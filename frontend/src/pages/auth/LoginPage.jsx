@@ -4,6 +4,25 @@ import { useState } from 'react'
 import { SocialAuthRolePicker } from '../../components/auth/SocialAuthRolePicker'
 import { apiRequest } from '../../services/apiClient'
 
+const ADMIN_DEVICE_STORAGE_KEY = 'university_key_admin_device_id'
+
+function getAdminDeviceId() {
+  try {
+    const existingDeviceId = window.localStorage.getItem(ADMIN_DEVICE_STORAGE_KEY)
+
+    if (existingDeviceId) {
+      return existingDeviceId
+    }
+
+    const generatedDeviceId = window.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`
+    window.localStorage.setItem(ADMIN_DEVICE_STORAGE_KEY, generatedDeviceId)
+
+    return generatedDeviceId
+  } catch {
+    return `${Date.now()}-${Math.random().toString(36).slice(2)}`
+  }
+}
+
 // Icones SVG locales pour eviter une dependance supplementaire sur l'ecran d'authentification.
 function AuthIcon({ name, className = 'h-5 w-5' }) {
   // Base commune: toutes les icones gardent la meme epaisseur et le meme style.
@@ -143,6 +162,9 @@ export function LoginPage({ labels }) {
       // Le backend accepte ici un nom, un e-mail ou un telephone dans le champ "email".
       const payload = await apiRequest('/auth/login', {
         method: 'POST',
+        headers: {
+          'X-Admin-Device-Id': getAdminDeviceId(),
+        },
         body: JSON.stringify({
           email: formData.get('email'),
           password: formData.get('password'),

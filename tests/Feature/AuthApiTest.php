@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\AdminDevice;
 use App\Models\User;
 use App\Models\CodeVerification;
 use Illuminate\Support\Facades\DB;
@@ -253,5 +254,69 @@ class AuthApiTest extends TestCase
             'email' => 'blocked@example.com',
             'password' => 'secret123',
         ])->assertUnprocessable();
+    }
+
+    /**
+     * Le premier navigateur admin devient l'appareil autorise de reference.
+     */
+    public function test_first_admin_login_authorizes_current_device(): void
+    {
+        $admin = User::factory()->create([
+            'name' => 'MINESEC',
+            'email' => 'admin@example.com',
+            'password' => Hash::make('secret123'),
+            'role' => 'admin',
+            'statut' => 'actif',
+        ]);
+
+        $this->withHeader('X-Admin-Device-Id', 'trusted-browser')
+            ->postJson('/api/v1/auth/login', [
+                'email' => 'admin@example.com',
+                'password' => 'secret123',
+                'device_name' => 'web',
+            ])
+            ->assertOk()
+            ->assertJsonStructure(['token', 'user' => ['id', 'role']]);
+
+        $device = AdminDevice::query()->where('user_id', $admin->id)->firstOrFail();
+
+        $this->assertNotSame('trusted-browser', $device->device_id_hash);
+        $this->assertSame(hash('sha256', 'trusted-browser'), $device->device_id_hash);
+        $this->assertNotNull($device->authorized_at);
+    }
+
+    /**
+     * Apres l'autorisation initiale, un autre appareil admin est bloque.
+     */
+    public function test_admin_login_rejects_unknown_device_after_first_authorization(): void
+    {
+        $admin = User::factory()->create([
+            'email' => 'locked-admin@example.com',
+            'password' => Hash::make('secret123'),
+            'role' => 'admin',
+            'statut' => 'actif',
+        ]);
+
+        AdminDevice::query()->create([
+            'user_id' => $admin->id,
+            'device_id_hash' => hash('sha256', 'trusted-browser'),
+            'device_name' => 'web',
+            'authorized_at' => now(),
+        ]);
+
+        $this->withHeader('X-Admin-Device-Id', 'unknown-browser')
+            ->postJson('/api/v1/auth/login', [
+                'email' => 'locked-admin@example.com',
+                'password' => 'secret123',
+                'device_name' => 'web',
+            ])
+            ->assertForbidden()
+            ->assertJsonPath('message', "Cet appareil n'est pas autorise pour le compte administrateur.");
+
+        $this->assertDatabaseHas('admin_devices', [
+            'user_id' => $admin->id,
+            'device_id_hash' => hash('sha256', 'unknown-browser'),
+            'authorized_at' => null,
+        ]);
     }
 }

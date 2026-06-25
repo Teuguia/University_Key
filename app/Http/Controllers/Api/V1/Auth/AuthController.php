@@ -280,6 +280,14 @@ class AuthController extends Controller
             ]);
         }
 
+        if ($user->isAdmin()) {
+            $blockedDeviceResponse = $this->ensureAdminDeviceIsAllowed($user, $request);
+
+            if ($blockedDeviceResponse) {
+                return $blockedDeviceResponse;
+            }
+        }
+
         $user->forceFill(['derniere_connexion' => now()])->save();
 
         Log::info('auth.login.success', [
@@ -330,6 +338,67 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Deconnexion reussie.',
         ]);
+    }
+
+    /**
+     * Verifie qu'un compte admin se connecte depuis un appareil deja autorise.
+     */
+    private function ensureAdminDeviceIsAllowed(User $user, Request $request): ?JsonResponse
+    {
+        $rawDeviceId = trim((string) ($request->header('X-Admin-Device-Id') ?: $request->input('admin_device_id')));
+
+        if ($rawDeviceId === '') {
+            Log::warning('auth.admin_device.missing', [
+                'user_id' => $user->id,
+                'ip' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'message' => 'Cet appareil ne peut pas ouvrir le compte administrateur.',
+            ], 403);
+        }
+
+        $deviceHash = hash('sha256', $rawDeviceId);
+        $hasAuthorizedDevice = $user->adminDevices()->whereNotNull('authorized_at')->exists();
+        $device = $user->adminDevices()->firstOrNew(['device_id_hash' => $deviceHash]);
+
+        $device->fill([
+            'device_name' => $request->input('device_name') ?: 'web',
+            'user_agent' => $request->userAgent(),
+            'last_ip' => $request->ip(),
+            'last_used_at' => now(),
+        ]);
+
+        if (! $hasAuthorizedDevice && ! $device->authorized_at) {
+            $device->authorized_at = now();
+            $device->save();
+
+            Log::info('auth.admin_device.first_authorized', [
+                'user_id' => $user->id,
+                'device_id' => $device->id,
+                'ip' => $request->ip(),
+            ]);
+
+            return null;
+        }
+
+        if (! $device->authorized_at) {
+            $device->save();
+
+            Log::warning('auth.admin_device.blocked', [
+                'user_id' => $user->id,
+                'device_id' => $device->id,
+                'ip' => $request->ip(),
+            ]);
+
+            return response()->json([
+                'message' => "Cet appareil n'est pas autorise pour le compte administrateur.",
+            ], 403);
+        }
+
+        $device->save();
+
+        return null;
     }
 
     /**

@@ -90,6 +90,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Retourne les appareils autorises a ouvrir l'espace administrateur.
+     */
+    public function adminDevices(): HasMany
+    {
+        return $this->hasMany(AdminDevice::class);
+    }
+
+    /**
      * Indique si l'utilisateur possede le role administrateur.
      */
     public function isAdmin(): bool
