@@ -23,6 +23,7 @@ use Laravel\Sanctum\HasApiTokens;
     'telephone',
     'langue_preferee',
     'derniere_connexion',
+    'email_verified_at',
     'telephone_verified_at',
     'verification_requise',
 ])]

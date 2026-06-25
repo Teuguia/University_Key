@@ -120,7 +120,16 @@ function GraduationIllustration() {
  */
 export function LoginPage({ labels }) {
   // status pilote le message utilisateur; isSubmitting bloque le double envoi du formulaire.
-  const [status, setStatus] = useState({ type: '', message: '' })
+  const [status, setStatus] = useState(() => {
+    try {
+      const notice = JSON.parse(window.localStorage.getItem('university_key_auth_notice') || 'null')
+      window.localStorage.removeItem('university_key_auth_notice')
+
+      return notice?.message ? notice : { type: '', message: '' }
+    } catch {
+      return { type: '', message: '' }
+    }
+  })
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   async function handleSubmit(event) {

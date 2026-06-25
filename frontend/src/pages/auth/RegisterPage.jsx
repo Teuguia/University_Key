@@ -152,15 +152,8 @@ export function RegisterPage({ labels, onOpenLegal }) {
         }),
       })
 
-      // Aucun token n'est delivre avant la double verification e-mail/telephone.
-      window.localStorage.setItem('university_key_verification_identifier', formData.get('email'))
-      if (payload.debug_verification_codes) {
-        window.localStorage.setItem('university_key_debug_verification_codes', JSON.stringify(payload.debug_verification_codes))
-      } else {
-        window.localStorage.removeItem('university_key_debug_verification_codes')
-      }
-      setStatus({ type: 'success', message: payload.message })
-      window.location.hash = 'verification'
+      window.localStorage.setItem('university_key_auth_notice', JSON.stringify({ type: 'success', message: payload.message }))
+      window.location.hash = 'connexion'
     } catch (error) {
       setStatus({ type: 'error', message: error.message })
     } finally {

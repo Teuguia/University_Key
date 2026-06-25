@@ -46,9 +46,9 @@ class AuthApiTest extends TestCase
     }
 
     /**
-     * L'inscription ne doit jamais donner de token avant la double verification.
+     * L'inscription etudiant cree un compte actif qui peut se connecter ensuite.
      */
-    public function test_student_registration_requires_double_verification_without_token(): void
+    public function test_student_registration_creates_active_account_ready_for_login(): void
     {
         $email = 'marie.'.uniqid().'@example.com';
         $telephone = '69'.random_int(1000000, 9999999);
@@ -73,16 +73,24 @@ class AuthApiTest extends TestCase
         $user = User::query()->where('email', $email)->firstOrFail();
 
         $this->assertTrue(Hash::check('secret123', $user->password));
-        $this->assertSame('en_attente', $user->statut);
-        $this->assertTrue($user->verification_requise);
+        $this->assertSame('actif', $user->statut);
+        $this->assertFalse($user->verification_requise);
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertNotNull($user->telephone_verified_at);
         $this->assertDatabaseHas('profils_etudiants', [
             'user_id' => $user->id,
             'prenom' => 'Marie',
             'nom' => 'Ngono',
         ]);
-        $codes = CodeVerification::query()->where('user_id', $user->id)->get();
-        $this->assertCount(2, $codes);
-        $this->assertTrue($codes->every(fn (CodeVerification $code): bool => strlen($code->code) > 6));
+
+        $this->assertSame(0, CodeVerification::query()->where('user_id', $user->id)->count());
+
+        $login = $this->postJson('/api/v1/auth/login', [
+            'email' => $email,
+            'password' => 'secret123',
+        ]);
+
+        $login->assertOk()->assertJsonStructure(['token', 'user' => ['id', 'role', 'statut']]);
     }
 
     public function test_student_receives_token_only_after_both_codes_are_verified(): void
@@ -189,6 +197,11 @@ class AuthApiTest extends TestCase
             ->assertJsonPath('user.role', 'conseiller');
 
         $user = User::query()->where('email', $email)->firstOrFail();
+
+        $this->assertSame('en_attente', $user->statut);
+        $this->assertFalse($user->verification_requise);
+        $this->assertNotNull($user->email_verified_at);
+        $this->assertNotNull($user->telephone_verified_at);
 
         $this->assertDatabaseHas('profils_conseillers', [
             'user_id' => $user->id,

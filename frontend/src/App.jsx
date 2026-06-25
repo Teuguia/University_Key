@@ -8,7 +8,6 @@ import { LegalModal } from './components/legal/LegalModal'
 import { useLocalizedCopy } from './hooks/useLocalizedCopy'
 import { LoginPage } from './pages/auth/LoginPage'
 import { RegisterPage } from './pages/auth/RegisterPage'
-import { VerificationPage } from './pages/auth/VerificationPage'
 import { AdminDashboardPage } from './pages/admin/AdminDashboardPage'
 import { CounselorDashboardPage } from './pages/counselor/CounselorDashboardPage'
 import { CommunicationsPage } from './pages/communications/CommunicationsPage'
@@ -20,16 +19,12 @@ import { StudentDashboardPage, StudentTestWindowPage } from './pages/student/Stu
 function getActivePage() {
   const hash = window.location.hash.replace('#', '')
 
-  if (['connexion', 'login', 'auth'].includes(hash)) {
+  if (['connexion', 'login', 'auth', 'verification', 'verify'].includes(hash)) {
     return 'login'
   }
 
   if (['inscription', 'register'].includes(hash)) {
     return 'register'
-  }
-
-  if (['verification', 'verify'].includes(hash)) {
-    return 'verification'
   }
 
   if (['dashboard', 'tableau-de-bord', 'student-dashboard'].includes(hash)) {
@@ -101,7 +96,7 @@ function App() {
     document.documentElement.lang = language
   }, [language])
 
-  const isAuthPage = activePage === 'login' || activePage === 'register' || activePage === 'verification'
+  const isAuthPage = activePage === 'login' || activePage === 'register'
   const isAdminDashboard = activePage === 'admin-dashboard'
   const isStudentTestWindow = activePage === 'student-test'
 
@@ -118,7 +113,6 @@ function App() {
       <main id="main">
         {activePage === 'login' && <LoginPage labels={labels.auth} />}
         {activePage === 'register' && <RegisterPage labels={labels.auth} onOpenLegal={setLegalModalType} />}
-        {activePage === 'verification' && <VerificationPage labels={labels.auth} />}
         {activePage === 'admin-dashboard' && <AdminDashboardPage language={language} />}
         {activePage === 'counselor-dashboard' && <CounselorDashboardPage labels={labels.counselorDashboard} />}
         {activePage === 'student-dashboard' && <StudentDashboardPage labels={labels.dashboard} />}

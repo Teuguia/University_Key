@@ -37,15 +37,18 @@ class AuthController extends Controller
         $validated = $request->validated();
 
         $registration = DB::transaction(function () use ($validated): array {
+            $isStudent = $validated['role'] === 'etudiant';
+
             $user = User::query()->create([
                 'name' => trim($validated['prenom'].' '.$validated['nom']),
                 'email' => $validated['email'],
                 // Hash explicite pour rendre la securite visible, meme si le cast User le protege aussi.
                 'password' => Hash::make($validated['password']),
                 'role' => $validated['role'],
-                // Aucun compte public n'est utilisable avant la double verification.
-                'statut' => 'en_attente',
-                'verification_requise' => true,
+                'statut' => $isStudent ? 'actif' : 'en_attente',
+                'verification_requise' => false,
+                'email_verified_at' => now(),
+                'telephone_verified_at' => now(),
                 'telephone' => $validated['telephone'],
                 'langue_preferee' => $validated['langue_preferee'] ?? 'fr',
             ]);
@@ -77,18 +80,7 @@ class AuthController extends Controller
                 ]);
             }
 
-            $codes = [
-                $this->createVerificationCode($user, 'email', $user->email),
-                $this->createVerificationCode($user, 'telephone', $user->telephone),
-            ];
-
-            $delivery = [];
-
-            foreach ($codes as $code) {
-                $delivery[$code['type']] = $this->verificationDelivery->send($code['type'], $code['target'], $code['plain_code']);
-            }
-
-            return ['user' => $user, 'codes' => $codes, 'delivery' => $delivery];
+            return ['user' => $user];
         });
 
         Log::info('auth.register.success', [
@@ -100,14 +92,11 @@ class AuthController extends Controller
             'message' => 'Compte cree. Verifiez votre e-mail et votre numero de telephone pour l’activer.',
             'user' => $this->publicUser($registration['user']->loadMissing(['profilEtudiant', 'profilConseiller'])),
             'verification' => $this->verificationPayload($registration['user']),
-            'verification_delivery' => $registration['delivery'],
         ];
 
-        if (config('services.verification.debug_codes')) {
-            $response['debug_verification_codes'] = collect($registration['codes'])
-                ->mapWithKeys(fn (array $code): array => [$code['type'] => $code['plain_code']])
-                ->all();
-        }
+        $response['message'] = $registration['user']->isEtudiant()
+            ? 'Compte cree avec succes. Connectez-vous pour acceder a votre espace etudiant.'
+            : 'Compte conseiller cree. Il attend la validation administrative avant connexion.';
 
         return response()->json($response, 201);
     }
